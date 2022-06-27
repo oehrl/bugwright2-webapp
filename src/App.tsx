@@ -7,7 +7,7 @@ import FilterIcon from "@suid/icons-material/FilterAlt";
 import ArrowLeftIcon from "@suid/icons-material/ArrowLeft";
 import ArrowRightIcon from "@suid/icons-material/ArrowRight";
 import TextField from '@suid/material/TextField';
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, onCleanup, Show } from 'solid-js';
 import { AmbientLight, BoxGeometry, DirectionalLight, Mesh, MeshPhongMaterial, Scene, Vector3 } from 'three';
 
 import AreaOfInterest, { AreaOfInterestData } from './AreaOfInterest';
@@ -15,11 +15,16 @@ import AreaOfInterestList from './AreaOfInterestList';
 import composeScene from './ROSSceneComposer';
 import Viewport3D from './Viewport3D';
 import IconButton from '@suid/material/IconButton';
+import Button from '@suid/material/Button';
+import { RosbridgeConnection } from './Rosbridge';
+import Modal from '@suid/material/Modal';
+import ConnectionDialog from './ConnectionDialog';
 
 const App: Component = () => {
   const [scene, setScene] = createSignal(new Scene());
+  const [connection, setConnection] = createSignal<RosbridgeConnection|null>(null);
 
-  composeScene(scene());
+  onCleanup(() => connection()?.socket.close() );
 
   const cubeGeometry = new BoxGeometry(1, 1, 1);
   cubeGeometry.computeVertexNormals();
@@ -95,14 +100,33 @@ const App: Component = () => {
 
   return (
     <ThemeProvider theme={theme}>
+      <ConnectionDialog
+        connection={connection()}
+        setConnection={connection => {
+          setConnection(connection);
+          composeScene(scene(), connection);
+        }}
+      />
       <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <AppBar position="static">
           Dashboard
+          <Button
+            onClick={() => {
+              connection()?.socket.close();
+              setConnection(null);
+            }}
+          >
+            Disconnect
+          </Button>
         </AppBar>
         <Grid container sx={{ flexGrow: 1, overflow: "auto" }}>
+          <Grid item md={12}>
+          </Grid>
           <Grid item md={9} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
             <Viewport3D scene={scene()} style={{ flexGrow: "1", height: "100%" }} />
-            <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
+            {
+              // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
+            }
           </Grid>
           <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>

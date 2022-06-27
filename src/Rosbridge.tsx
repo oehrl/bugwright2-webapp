@@ -86,13 +86,13 @@ export class RosbridgeConnection {
   topicCallbacks: {[topic: string]: ((data: any) => void)[]} = {};
   serviceCallbacks: {[topic: string]: ((data: any) => void)[]} = {};
 
-  constructor(url: string | URL, onConnected?: () => void, onError?: () => void) {
+  constructor(url: string | URL, onConnected?: (connection: RosbridgeConnection) => void, onError?: (connection: RosbridgeConnection) => void) {
     console.info(`Opening rosbridge connection to ${url}`);
     this.socket = new WebSocket(url);
     this.socket.onopen = () => {
       console.info(`Rosbridge connection to ${url} is open`);
       if (onConnected) {
-        onConnected();
+        onConnected(this);
       }
     }
     this.socket.onclose = () => {
@@ -101,7 +101,7 @@ export class RosbridgeConnection {
     this.socket.onerror = error => {
       console.error(`Websocket error: ${error}`);
       if (onError) {
-        onError();
+        onError(this);
       }
     }
     this.socket.onmessage = (event) => {
@@ -146,7 +146,7 @@ export class RosbridgeConnection {
     }
   }
 
-  callService<T = any>(service: string, callback: (values: T) => void) {
+  callService<T = any, ArgumentType = any>(service: string, callback: (values: T) => void, args?: ArgumentType) {
     if (service in this.serviceCallbacks) {
       this.serviceCallbacks[service].push(callback);
     } else {
@@ -155,6 +155,7 @@ export class RosbridgeConnection {
     this.sendMessage({
       op: "call_service",
       service,
+      args: args as any,
     });
   }
 }

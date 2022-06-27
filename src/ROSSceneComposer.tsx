@@ -1,111 +1,28 @@
 import { BufferGeometry, DoubleSide, Euler, Float32BufferAttribute, Mesh, MeshBasicMaterial, MeshPhongMaterial, Scene } from "three";
+import { geometry_msgs } from "./ros/geometry_msgs";
+import { mesh_msgs } from "./ros/mesh_msgs";
+import { tf2_msgs } from "./ros/tf2_msgs";
 import { RosbridgeConnection } from "./Rosbridge";
 
-export interface ROSTimeStamp {
-  secs: number;
-  nsecs: number;
-}
-
-namespace std_msgs {
-  export interface Header {
-    seq: number;
-    stamp: ROSTimeStamp;
-    frame_id: number;
-  }
-}
-
-namespace geometry_msgs {
-  export interface Point {
-    x: number;
-    y: number;
-    z: number;
-  }
-
-  export interface PointStamped {
-    header: std_msgs.Header;
-    point: Point;
-  }
-
-  export interface Vector3 {
-    x: number;
-    y: number;
-    z: number;
-  }
-
-  export interface Quaternion {
-    x: number;
-    y: number;
-    z: number;
-    w: number;
-  }
-
-  export interface Transform {
-    translation: Vector3;
-    rotation: Quaternion;
-  }
-
-  export interface TransformStamped {
-    header: std_msgs.Header;
-    child_frame_id: string;
-    transform: Transform;
-  }
-}
-
-namespace tf2_msgs {
-  export interface TFMessage {
-    transforms: geometry_msgs.TransformStamped[];
-  }
-}
-
-namespace sensor_msgs {
-  interface Image {
-    header: std_msgs.Header;
-    width: number;
-    height: number;
-    encoding: string;
-    is_bigendian: number;
-    step: number;
-    data: number[];
-  }
-}
-
-namespace mesh_msgs {
-
-  export interface MeshTriangleIndices {
-    vertex_indices: [number, number, number];
-  }
-
-  export interface MeshGeometry {
-    vertices: geometry_msgs.Point[];
-    vertex_normals: geometry_msgs.Point[];
-    faces: MeshTriangleIndices[];
-  }
-
-  export interface MeshGeometryStamped {
-    uuid: string;
-    mesh_geometry: MeshGeometry;
-  }
-
-}
 
 const composeScene = (scene: Scene, connection: RosbridgeConnection) => {
-  // connection.callService<boolean, geometry_msgs.PointStamped>(
-  //   "/",
-  //   value => console.log(value),
-  //   {
-  //     header: {
-  //       seq: 0,
-  //       frame_id: 0,
-  //       stamp: {
-  //         secs: 0,
-  //         nsecs: 0,
-  //       },
-  //     },
-  //     point: { x: 0, y: 0, z: 0}
-  //   }
-  // );
+  connection.callService<boolean, [geometry_msgs.PointStamped]>(
+    "/service_test_node/set_point",
+    value => console.log(value),
+    [{
+      header: {
+        seq: 0,
+        frame_id: "0",
+        stamp: {
+          secs: 0,
+          nsecs: 0,
+        },
+      },
+      point: { x: 69, y: 420, z: 1337 }
+    }]
+  );
 
-  connection.callService("/rosapi/services", value => console.log(value));
+  // connection.callService("/rosapi/services", value => console.log(value));
 
   connection.callService<{ topics: string[], types: string[]}>("/rosapi/topics", values => {
     for (let i = 0; i < values.topics.length; ++i) {
@@ -158,7 +75,7 @@ const composeScene = (scene: Scene, connection: RosbridgeConnection) => {
           scene.add(model);
         });
       } else if (values.types[i] === "tf2_msgs/TFMessage") {
-        console.log(`Subscribe to tfMessage`);
+        console.log(`Subscribe to tfMessage: ${values.topics[i]}`);
         connection.subscribe<tf2_msgs.TFMessage>(values.topics[i], tfMessage => {
           // console.log(`Received tf message: ${JSON.stringify(tfMessage)}`);
         });

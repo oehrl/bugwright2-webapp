@@ -19,6 +19,8 @@ import Button from '@suid/material/Button';
 import { RosbridgeConnection } from './Rosbridge';
 import Modal from '@suid/material/Modal';
 import ConnectionDialog from './ConnectionDialog';
+import ImageList from './ImageList';
+import ROSImage from './ROSImage';
 
 const App: Component = () => {
   const [scene, setScene] = createSignal(new Scene());
@@ -96,7 +98,8 @@ const App: Component = () => {
       audioNotes: [null, null, null],
     },
   ];
-  const [selectedIndex, selectIndex] = createSignal<number|null>(null);
+  // const [selectedIndex, selectIndex] = createSignal<number|null>(null);
+  const [selectedImage, selectImage] = createSignal<string|null>(null);
 
   return (
     <ThemeProvider theme={theme}>
@@ -138,27 +141,18 @@ const App: Component = () => {
               />
               <FilterIcon />
             </Box>
-            <AreaOfInterestList
+            <ImageList
               style={{ flexGrow: "1", height: "100%", overflow: "auto" }}
-              data={areaOfInterests}
-              selectedIndex={selectedIndex()}
-              onSelectionChanged={selectIndex}
+              connection={connection()}
+              onSelectionChanged={selectImage}
             />
-            <Show when={selectedIndex() !== null}>
-              <Box sx={{ display: 'flex', alignItems: 'center', width: "100%" }}>
-                <IconButton onClick={() => selectIndex(selectedIndex() === 0 ? areaOfInterests.length - 1 : selectedIndex () as number - 1)}>
-                  <ArrowLeftIcon />
-                </IconButton>
-                <AreaOfInterest
-                  data={areaOfInterests}
-                  selectedIndex={selectedIndex() as number}
-                  onSelectionChanged={selectIndex}
-                  style={{ flexGrow: 1 }}
-                />
-                <IconButton onClick={() => selectIndex((selectedIndex() as number + 1) % areaOfInterests.length)}>
-                  <ArrowRightIcon />
-                </IconButton>
-              </Box>
+            <Show when={selectedImage() !== null}>
+              <ROSImage
+                connection={connection()}
+                topic={selectedImage() as string}
+                width={200}
+                height={200}
+              />
             </Show>
           </Grid>
         </Grid>

@@ -21,6 +21,7 @@ import Modal from '@suid/material/Modal';
 import ConnectionDialog from './ConnectionDialog';
 import ImageList from './ImageList';
 import ROSImage from './ROSImage';
+import TransformTree from './ros/TransformTree';
 
 const App: Component = () => {
   const [scene, setScene] = createSignal(new Scene());

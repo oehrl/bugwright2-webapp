@@ -1,32 +1,36 @@
 import { BufferGeometry, DoubleSide, Euler, Float32BufferAttribute, Mesh, MeshBasicMaterial, MeshPhongMaterial, Scene, SphereGeometry } from "three";
 import { geometry_msgs } from "./ros/geometry_msgs";
 import { mesh_msgs } from "./ros/mesh_msgs";
+import { nav_msgs } from "./ros/nav_msgs";
 import { tf2_msgs } from "./ros/tf2_msgs";
+import TransformTree from "./ros/TransformTree";
 import { RosbridgeConnection } from "./Rosbridge";
 
 
 const composeScene = (scene: Scene, connection: RosbridgeConnection) => {
-  connection.callService<boolean, [geometry_msgs.PointStamped]>(
-    "/service_test_node/set_point",
-    value => console.log(value),
-    [{
-      header: {
-        seq: 0,
-        frame_id: "0",
-        stamp: {
-          secs: 0,
-          nsecs: 0,
-        },
-      },
-      point: { x: 69, y: 420, z: 1337 }
-    }]
-  );
+  // connection.callService<boolean, [geometry_msgs.PointStamped]>(
+  //   "/service_test_node/set_point",
+  //   value => console.log(value),
+  //   [{
+  //     header: {
+  //       seq: 0,
+  //       frame_id: "0",
+  //       stamp: {
+  //         secs: 0,
+  //         nsecs: 0,
+  //       },
+  //     },
+  //     point: { x: 69, y: 420, z: 1337 }
+  //   }]
+  // );
 
   // connection.callService("/rosapi/services", value => console.log(value));
 
+  const transformTree = new TransformTree();
+
   connection.callService<{ topics: string[], types: string[]}>("/rosapi/topics", values => {
     for (let i = 0; i < values.topics.length; ++i) {
-      // console.log(`Found topic ${values.topics[i]} of type ${values.types[i]}`);
+      console.log(`Found topic ${values.topics[i]} of type ${values.types[i]}`);
       if (values.types[i] === "mesh_msgs/MeshGeometryStamped") {
         console.log(`Found mesh: ${values.topics[i]}`);
         connection.subscribe<mesh_msgs.MeshGeometryStamped>(values.topics[i], mesh => {
@@ -86,6 +90,33 @@ const composeScene = (scene: Scene, connection: RosbridgeConnection) => {
             poseStamped.pose.position.z,
             -poseStamped.pose.position.y
           );
+        });
+      } else if (values.types[i] === "tf2_msgs/TFMessage") {
+        console.log(`tf2/TFMessage: ${values.topics[i]}`);
+        connection.subscribe<tf2_msgs.TFMessage>(values.topics[i], tfMessage => {
+          transformTree.update(tfMessage);
+        });
+      } else if (values.types[i] === "nav_msgs/Path") {
+        console.log(`nav_msgs/Path: ${values.topics[i]}`);
+        const sphereGeometry = new SphereGeometry(0.01);
+        const sphereMaterial = new MeshBasicMaterial({ color: 0xff00ff00 });
+        const meshes : Mesh[] = [];
+        connection.subscribe<nav_msgs.Path>(values.topics[i], path => {
+          for (const mesh of meshes) {
+            scene.remove(mesh);
+          }
+          meshes.splice(0, meshes.length);
+
+          for (const poseStamped of path.poses) {
+            const sphere = new Mesh(sphereGeometry, sphereMaterial);
+            scene.add(sphere);
+            sphere.position.set(
+              poseStamped.pose.position.x,
+              poseStamped.pose.position.z,
+              -poseStamped.pose.position.y
+            );
+            meshes.push(sphere);
+          }
         });
       }
     }

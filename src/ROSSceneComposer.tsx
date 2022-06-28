@@ -1,4 +1,4 @@
-import { BufferGeometry, DoubleSide, Euler, Float32BufferAttribute, Mesh, MeshBasicMaterial, MeshPhongMaterial, Scene } from "three";
+import { BufferGeometry, DoubleSide, Euler, Float32BufferAttribute, Mesh, MeshBasicMaterial, MeshPhongMaterial, Scene, SphereGeometry } from "three";
 import { geometry_msgs } from "./ros/geometry_msgs";
 import { mesh_msgs } from "./ros/mesh_msgs";
 import { tf2_msgs } from "./ros/tf2_msgs";
@@ -74,10 +74,18 @@ const composeScene = (scene: Scene, connection: RosbridgeConnection) => {
           model.setRotationFromEuler(new Euler(-Math.PI / 2, 0, 0));
           scene.add(model);
         });
-      } else if (values.types[i] === "tf2_msgs/TFMessage") {
-        console.log(`Subscribe to tfMessage: ${values.topics[i]}`);
-        connection.subscribe<tf2_msgs.TFMessage>(values.topics[i], tfMessage => {
-          // console.log(`Received tf message: ${JSON.stringify(tfMessage)}`);
+      } else if (values.types[i] === "geometry_msgs/PoseStamped") {
+        console.log(`geometry_msgs/PoseStamped: ${values.topics[i]}`);
+        const sphereGeometry = new SphereGeometry(0.1);
+        const sphereMaterial = new MeshBasicMaterial({ color: 0xffff0000 });
+        const sphere = new Mesh(sphereGeometry, sphereMaterial);
+        scene.add(sphere);
+        connection.subscribe<geometry_msgs.PoseStamped>(values.topics[i], poseStamped => {
+          sphere.position.set(
+            poseStamped.pose.position.x,
+            poseStamped.pose.position.z,
+            -poseStamped.pose.position.y
+          );
         });
       }
     }

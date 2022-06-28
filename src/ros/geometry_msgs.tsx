@@ -35,4 +35,14 @@ export namespace geometry_msgs {
     child_frame_id: string;
     transform: Transform;
   }
+
+  export interface Pose {
+    position: Point;
+    orientation: Quaternion;
+  }
+
+  export interface PoseStamped {
+    header: std_msgs.Header;
+    pose: Pose;
+  }
 }

@@ -8,7 +8,7 @@ import ArrowLeftIcon from "@suid/icons-material/ArrowLeft";
 import ArrowRightIcon from "@suid/icons-material/ArrowRight";
 import TextField from '@suid/material/TextField';
 import { Component, createSignal, onCleanup, Show } from 'solid-js';
-import { AmbientLight, BoxGeometry, DirectionalLight, Mesh, MeshPhongMaterial, Scene, Vector3 } from 'three';
+import { AmbientLight, BoxGeometry, DirectionalLight, Mesh, MeshPhongMaterial, PlaneGeometry, Scene, Vector3 } from 'three';
 
 import AreaOfInterest, { AreaOfInterestData } from './AreaOfInterest';
 import AreaOfInterestList from './AreaOfInterestList';
@@ -29,25 +29,18 @@ const App: Component = () => {
 
   onCleanup(() => connection()?.socket.close() );
 
-  const cubeGeometry = new BoxGeometry(1, 1, 1);
-  cubeGeometry.computeVertexNormals();
-  const cubeMaterial = new MeshPhongMaterial({ color: 0x00ff00 });
+  const planeGeometry = new PlaneGeometry(100, 100, 100, 100);
+  planeGeometry.computeVertexNormals();
+  const planeMaterial = new MeshPhongMaterial({
+    color: 0x0000f2,
+    wireframe: true
+  });
 
-  const cube = new Mesh(cubeGeometry, cubeMaterial);
-  cube.translateOnAxis(new Vector3(1, 0, 1), 5);
-  scene().add(cube);
-
-  const cube2 = new Mesh(cubeGeometry, cubeMaterial);
-  cube2.translateOnAxis(new Vector3(1, 0, -1), 5);
-  scene().add(cube2);
-
-  const cube3 = new Mesh(cubeGeometry, cubeMaterial);
-  cube3.translateOnAxis(new Vector3(-1, 0, 1), 5);
-  scene().add(cube3);
-
-  const cube4 = new Mesh(cubeGeometry, cubeMaterial);
-  cube4.translateOnAxis(new Vector3(-1, 0, -1), 5);
-  scene().add(cube4);
+  const plane = new Mesh(planeGeometry, planeMaterial);
+  // plane.translateOnAxis(new Vector3(1, 0, 1), 5);
+  // plane.translateY(-10);
+  plane.rotateX(Math.PI * 0.5);
+  scene().add(plane);
 
   const light = new DirectionalLight(0xffffff, 0.8);
   light.position.set(0.1, 1, 2.0);
@@ -127,7 +120,7 @@ const App: Component = () => {
           <Grid item md={12}>
           </Grid>
           <Grid item md={9} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-            <Viewport3D scene={scene()} style={{ flexGrow: "1", height: "100%" }} />
+            <Viewport3D connection={connection()} scene={scene()} style={{ flexGrow: "1", height: "100%" }} />
             {
               // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
             }

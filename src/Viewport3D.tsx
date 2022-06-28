@@ -1,11 +1,14 @@
 import { Component, JSX, onCleanup, onMount } from "solid-js";
 import { Clock, OrthographicCamera, PerspectiveCamera, Scene, WebGLRenderer } from "three";
+import { mission_manager } from "./bugwright2/mission_manager";
 import FirstPersonControls from "./FirstPersonControls";
+import { RosbridgeConnection } from "./Rosbridge";
 
 export interface Viewport3DProps {
   scene: Scene;
   style?: JSX.CSSProperties | string;
   cameraType?: "orthographic" | "perspective";
+  connection: RosbridgeConnection | null;
 }
 
 const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
@@ -17,8 +20,10 @@ const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
         new OrthographicCamera(-10, 10, 10, -10, 0.1, 1000) :
         new PerspectiveCamera(75, 1.0, 0.1, 1000.0);
     camera.position.z = 20;
+    camera.position.y = 2;
 
     const renderer = new WebGLRenderer({ canvas, antialias: true });
+    renderer.setClearColor(0x222222);
     const controls = new FirstPersonControls(camera, canvas);
     controls.movementSpeed *= 5;
     if (props.cameraType === "orthographic") {
@@ -27,6 +32,20 @@ const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
     const clock = new Clock(true);
 
     let frame = requestAnimationFrame(render);
+
+
+    const onKeyPress = (event: KeyboardEvent) => {
+      if (event.code === "KeyP") {
+        props.connection?.callService<mission_manager.GoToPoint>(
+          "mission_manager/go_to_point",
+          value => {
+            console.log(value);
+          },
+          [{ x: camera.position.x, y: camera.position.y, z: camera.position.z }]
+        );
+      }
+    };
+    canvas.addEventListener('keypress', onKeyPress, false);
 
     function render() {
       frame = requestAnimationFrame(render);
@@ -57,6 +76,7 @@ const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
 
     onCleanup(() => {
       cancelAnimationFrame(frame);
+      canvas.removeEventListener('keypress', onKeyPress, false);
     });
   });
 

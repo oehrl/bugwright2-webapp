@@ -40,7 +40,7 @@ const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
           variant="standard"
           placeholder="ROSBridge IP and port"
           value={value()}
-          onChange={setValue}
+          onChange={(_, value) => setValue(value)}
           disabled={isConnecting()}
         />
         <Button

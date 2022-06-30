@@ -81,22 +81,22 @@ export type Message =
 
 export type MessageCallback = (message: Message) => void;
 
-export class RosbridgeConnection {
+export class ROSBridgeConnection {
   socket: WebSocket;
   topicCallbacks: {[topic: string]: ((data: any) => void)[]} = {};
   serviceCallbacks: {[topic: string]: ((data: any) => void)[]} = {};
 
-  constructor(url: string | URL, onConnected?: (connection: RosbridgeConnection) => void, onError?: (connection: RosbridgeConnection) => void) {
+  constructor(readonly url: string, onConnected?: (connection: ROSBridgeConnection) => void, onError?: (connection: ROSBridgeConnection) => void) {
     console.info(`Opening rosbridge connection to ${url}`);
     this.socket = new WebSocket(url);
     this.socket.onopen = () => {
-      console.info(`Rosbridge connection to ${url} is open`);
+      console.info(`ROSBridge connection to ${url} is open`);
       if (onConnected) {
         onConnected(this);
       }
     }
     this.socket.onclose = () => {
-      console.info(`Rosbridge connection to ${url} has been closed`);
+      console.info(`ROSBridge connection to ${url} has been closed`);
     }
     this.socket.onerror = error => {
       console.error(`Websocket error: ${error}`);

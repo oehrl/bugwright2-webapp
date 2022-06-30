@@ -4,22 +4,23 @@ import Button from "@suid/material/Button";
 import Modal from "@suid/material/Modal";
 import TextField from "@suid/material/TextField";
 import { Component, createSignal } from "solid-js";
-import { RosbridgeConnection } from "./Rosbridge";
+import { ROSBridgeConnection } from "./ROSBridge";
 
 export interface ConnectionDialogProps {
-  connection: RosbridgeConnection|null;
-  setConnection: (connection: RosbridgeConnection) => void;
+  open: boolean;
+  url?: string;
+  setURL: (url: string|null) => void;
 }
 
 const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
-  const [value, setValue] = createSignal("ws://192.168.1.213:9090");
+  const [value, setValue] = createSignal("ws://localhost:9090");
   const [isConnecting, setIsConnecting] = createSignal(false);
   const theme = useTheme();
   let textField: any;
 
   return (
     <Modal
-      open={props.connection === null}
+      open={props.open}
     >
       <Box
         sx={{
@@ -44,22 +45,16 @@ const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
           disabled={isConnecting()}
         />
         <Button
-          onClick={() => {
-            new RosbridgeConnection(
-              value(),
-              connection => {
-                props.setConnection(connection);
-                setIsConnecting(false);
-              },
-              () => {
-                setIsConnecting(false);
-              }
-            );
-            setIsConnecting(true);
-          }}
+          onClick={() => props.setURL(value())}
           disabled={isConnecting()}
         >
           Connect
+        </Button>
+        <Button
+          onClick={() => props.setURL(null)}
+          disabled={isConnecting()}
+        >
+          Cancel
         </Button>
       </Box>
     </Modal>

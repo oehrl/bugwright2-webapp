@@ -4,10 +4,10 @@ import { mesh_msgs } from "./ros/mesh_msgs";
 import { nav_msgs } from "./ros/nav_msgs";
 import { tf2_msgs } from "./ros/tf2_msgs";
 import TransformTree from "./ros/TransformTree";
-import { RosbridgeConnection } from "./Rosbridge";
+import { ROSBridgeConnection } from "./ROSBridge";
 
 
-const composeScene = (scene: Scene, connection: RosbridgeConnection) => {
+const composeScene = (scene: Scene, connection: ROSBridgeConnection) => {
   // connection.callService<boolean, [geometry_msgs.PointStamped]>(
   //   "/service_test_node/set_point",
   //   value => console.log(value),
@@ -25,6 +25,7 @@ const composeScene = (scene: Scene, connection: RosbridgeConnection) => {
   // );
 
   // connection.callService("/rosapi/services", value => console.log(value));
+  //
 
   const transformTree = new TransformTree();
 

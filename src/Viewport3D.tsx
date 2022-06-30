@@ -2,13 +2,13 @@ import { Component, JSX, onCleanup, onMount } from "solid-js";
 import { Clock, OrthographicCamera, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { mission_manager } from "./bugwright2/mission_manager";
 import FirstPersonControls from "./FirstPersonControls";
-import { RosbridgeConnection } from "./Rosbridge";
+import { ROSBridgeConnection } from "./ROSBridge";
 
 export interface Viewport3DProps {
   scene: Scene;
   style?: JSX.CSSProperties | string;
   cameraType?: "orthographic" | "perspective";
-  connection: RosbridgeConnection | null;
+  connection: ROSBridgeConnection | null;
 }
 
 const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
@@ -35,15 +35,15 @@ const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
 
 
     const onKeyPress = (event: KeyboardEvent) => {
-      if (event.code === "KeyP") {
-        props.connection?.callService<mission_manager.GoToPoint>(
-          "mission_manager/go_to_point",
-          value => {
-            console.log(value);
-          },
-          [{ x: camera.position.x, y: camera.position.y, z: camera.position.z }]
-        );
-      }
+      // if (event.code === "KeyP") {
+      //   props.connection?.callService<mission_manager.GoToPoint>(
+      //     "mission_manager/go_to_point",
+      //     value => {
+      //       console.log(value);
+      //     },
+      //     [{ x: camera.position.x, y: camera.position.y, z: camera.position.z }]
+      //   );
+      // }
     };
     canvas.addEventListener('keypress', onKeyPress, false);
 

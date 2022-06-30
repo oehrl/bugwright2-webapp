@@ -5,13 +5,13 @@ import Modal from "@suid/material/Modal";
 import TextField from "@suid/material/TextField";
 import { Component, createEffect, createSignal } from "solid-js";
 import { sensor_msgs } from "./ros/sensor_msgs";
-import { RosbridgeConnection } from "./Rosbridge";
+import { ROSBridgeConnection } from "./ROSBridge";
 
 export interface ROSImageProps {
   topic: string;
   width: number;
   height: number;
-  connection: RosbridgeConnection | null;
+  connection: ROSBridgeConnection | null;
 }
 
 const ROSImage: Component<ROSImageProps> = (props) => {

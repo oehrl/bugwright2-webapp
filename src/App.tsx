@@ -1,33 +1,26 @@
 import { createTheme, ThemeProvider } from '@suid/material';
-import AppBar from '@suid/material/AppBar';
 import Box from '@suid/material/Box';
 import Grid from '@suid/material/Grid';
 import SearchIcon from "@suid/icons-material/Search";
 import FilterIcon from "@suid/icons-material/FilterAlt";
-import ArrowLeftIcon from "@suid/icons-material/ArrowLeft";
-import ArrowRightIcon from "@suid/icons-material/ArrowRight";
 import TextField from '@suid/material/TextField';
 import { Component, createSignal, onCleanup, Show } from 'solid-js';
-import { AmbientLight, BoxGeometry, DirectionalLight, Mesh, MeshPhongMaterial, PlaneGeometry, Scene, Vector3 } from 'three';
+import { AmbientLight, DirectionalLight, Mesh, MeshPhongMaterial, PlaneGeometry, Scene } from 'three';
 
-import AreaOfInterest, { AreaOfInterestData } from './AreaOfInterest';
-import AreaOfInterestList from './AreaOfInterestList';
-import composeScene from './ROSSceneComposer';
 import Viewport3D from './Viewport3D';
-import IconButton from '@suid/material/IconButton';
-import Button from '@suid/material/Button';
-import { RosbridgeConnection } from './Rosbridge';
-import Modal from '@suid/material/Modal';
-import ConnectionDialog from './ConnectionDialog';
-import ImageList from './ImageList';
-import ROSImage from './ROSImage';
-import TransformTree from './ros/TransformTree';
+import MenuBar from './MenuBar';
+import { ROSBridgeConnection } from './ROSBridge';
+import ConnectionList from './ConnectionList';
 
 const App: Component = () => {
   const [scene, setScene] = createSignal(new Scene());
-  const [connection, setConnection] = createSignal<RosbridgeConnection|null>(null);
+  const [connections, setConnections] = createSignal<ROSBridgeConnection[]>([]);
 
-  onCleanup(() => connection()?.socket.close() );
+  onCleanup(() => {
+    for (const connection of connections()) {
+      connection.socket.close();
+    }
+  });
 
   const planeGeometry = new PlaneGeometry(100, 100, 100, 100);
   planeGeometry.computeVertexNormals();
@@ -97,30 +90,22 @@ const App: Component = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <ConnectionDialog
-        connection={connection()}
-        setConnection={connection => {
-          setConnection(connection);
-          composeScene(scene(), connection);
-        }}
-      />
+    {/*
+      */}
       <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-        <AppBar position="static">
-          Dashboard
-          <Button
-            onClick={() => {
-              connection()?.socket.close();
-              setConnection(null);
-            }}
-          >
-            Disconnect
-          </Button>
-        </AppBar>
+        <MenuBar setConnections={setConnections} connections={connections()} />
         <Grid container sx={{ flexGrow: 1, overflow: "auto" }}>
-          <Grid item md={12}>
+          <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+            <ConnectionList
+              connections={connections()}
+              setConnections={connections => {
+                setConnections(connections);
+              }}
+              style={{ overflow: "auto" }}
+            />
           </Grid>
-          <Grid item md={9} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-            <Viewport3D connection={connection()} scene={scene()} style={{ flexGrow: "1", height: "100%" }} />
+          <Grid item md={6} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+            <Viewport3D connection={null} scene={scene()} style={{ flexGrow: "1", height: "100%" }} />
             {
               // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
             }
@@ -135,6 +120,7 @@ const App: Component = () => {
               />
               <FilterIcon />
             </Box>
+            {/*
             <ImageList
               style={{ flexGrow: "1", height: "100%", overflow: "auto" }}
               connection={connection()}
@@ -148,6 +134,7 @@ const App: Component = () => {
                 height={200}
               />
             </Show>
+            */}
           </Grid>
         </Grid>
       </Box>

@@ -31,7 +31,7 @@ const composeScene = (scene: Scene, connection: ROSBridgeConnection) => {
 
   connection.callService<{ topics: string[], types: string[]}>("/rosapi/topics", values => {
     for (let i = 0; i < values.topics.length; ++i) {
-      console.log(`Found topic ${values.topics[i]} of type ${values.types[i]}`);
+      // console.log(`Found topic ${values.topics[i]} of type ${values.types[i]}`);
       if (values.types[i] === "mesh_msgs/MeshGeometryStamped") {
         console.log(`Found mesh: ${values.topics[i]}`);
         connection.subscribe<mesh_msgs.MeshGeometryStamped>(values.topics[i], mesh => {

@@ -1,3 +1,5 @@
+import Event, { EventSubscription } from "./Event"
+
 export interface SetStatusLevelMessage {
   op: "set_level";
   id?: string;
@@ -81,24 +83,52 @@ export type Message =
 
 export type MessageCallback = (message: Message) => void;
 
+export type ConnectionStatus = "Connecting" | "Connected" | "Not Connected";
+
+export interface ROSTopic {
+  id: string;
+  type: string;
+}
+
 export class ROSBridgeConnection {
   socket: WebSocket;
-  topicCallbacks: {[topic: string]: ((data: any) => void)[]} = {};
+  topicCallbacks: {[topic: string]: Event<[any]>} = {};
   serviceCallbacks: {[topic: string]: ((data: any) => void)[]} = {};
 
-  constructor(readonly url: string, onConnected?: (connection: ROSBridgeConnection) => void, onError?: (connection: ROSBridgeConnection) => void) {
+  topics: ROSTopic[] = [];
+  onTopicsChange = new Event<[ROSTopic[]]>();
+
+  status: ConnectionStatus = "Connecting";
+  onStatusChange = new Event<[ConnectionStatus]>();
+
+  constructor(
+    readonly url: string,
+    public onChange: (connection: ROSBridgeConnection) => void,
+    onConnected?: (connection: ROSBridgeConnection) => void,
+    onError?: (connection: ROSBridgeConnection) => void) {
     console.info(`Opening rosbridge connection to ${url}`);
     this.socket = new WebSocket(url);
     this.socket.onopen = () => {
       console.info(`ROSBridge connection to ${url} is open`);
-      if (onConnected) {
-        onConnected(this);
-      }
+      this.status = "Connected";
+      this.onChange(this);
+      this.updateTopics(() => {
+        if (onConnected) {
+          onConnected(this);
+        }
+      });
+      this.onStatusChange.invoke(this.status);
     }
     this.socket.onclose = () => {
+      this.status = "Not Connected";
+      this.onChange(this);
+      this.onStatusChange.invoke(this.status);
       console.info(`ROSBridge connection to ${url} has been closed`);
     }
     this.socket.onerror = error => {
+      this.status = "Not Connected";
+      this.onChange(this);
+      this.onStatusChange.invoke(this.status);
       console.error(`Websocket error: ${error}`);
       if (onError) {
         onError(this);
@@ -109,9 +139,7 @@ export class ROSBridgeConnection {
       switch (data.op) {
         case "publish":
           if (data.topic in this.topicCallbacks) {
-            for (const callback of this.topicCallbacks[data.topic]) {
-              callback(data.msg);
-            }
+            this.topicCallbacks[data.topic].invoke(data.msg);
           } else {
             console.error(`Received publish message for topic not subscribed to.`);
           }
@@ -135,14 +163,26 @@ export class ROSBridgeConnection {
   }
 
   subscribe<T = any>(topic: string, callback: (msg: T) => void) {
-    if (topic in this.topicCallbacks) {
-      this.topicCallbacks[topic].push(callback);
-    } else {
+    if (!(topic in this.topicCallbacks)) {
       this.sendMessage({
         op: "subscribe",
         topic,
       });
-      this.topicCallbacks[topic] = [callback];
+      this.topicCallbacks[topic] = new Event<[any]>();
+    } 
+    return this.topicCallbacks[topic].subscribe(callback);
+  }
+
+  unsubscribe(subscription: EventSubscription) {
+    subscription.unsubscribe();
+    for (const topic of Object.keys(this.topicCallbacks)) {
+      if (this.topicCallbacks[topic].subscriptionCount === 0) {
+        this.sendMessage({
+          op: "unsubscribe",
+          topic
+        });
+        delete this.topicCallbacks[topic];
+      }
     }
   }
 
@@ -157,5 +197,31 @@ export class ROSBridgeConnection {
       service,
       args: args as any,
     });
+  }
+
+  updateTopics(updateCallback?: (topics: ROSTopic[]) => void) {
+    this.callService<{ topics: string[], types: string[]}>("/rosapi/topics", values => {
+      this.topics.splice(0, this.topics.length);
+      for (let i = 0; i < values.topics.length; ++i) {
+        this.topics.push({
+          id: values.topics[i],
+          type: values.types[i],
+        });
+      }
+      if (updateCallback) {
+        updateCallback(this.topics);
+      }
+      this.onTopicsChange.invoke(this.topics);
+    });
+  }
+
+  getTopicsOfType(type: string) {
+    const topics: ROSTopic[] = [];
+    for (const topic of this.topics) {
+      if (topic.type === type) {
+        topics.push({ ...topic });
+      }
+    }
+    return topics;
   }
 }

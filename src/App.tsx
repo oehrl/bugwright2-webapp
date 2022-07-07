@@ -9,12 +9,13 @@ import { AmbientLight, DirectionalLight, Mesh, MeshPhongMaterial, PlaneGeometry,
 
 import Viewport3D from './Viewport3D';
 import MenuBar from './MenuBar';
-import { ROSBridgeConnection } from './ROSBridge';
+import { ROSBridgeConnection } from './ROSBridgeConnection';
 import ConnectionList from './ConnectionList';
+import ROSBridgeConnectionsProvider from './Connections';
 
 const App: Component = () => {
   const [scene, setScene] = createSignal(new Scene());
-  const [connections, setConnections] = createSignal<ROSBridgeConnection[]>([]);
+  const [connections, setConnections] = createSignal<ROSBridgeConnection[]>([], { equals: false });
 
   onCleanup(() => {
     for (const connection of connections()) {
@@ -90,54 +91,47 @@ const App: Component = () => {
 
   return (
     <ThemeProvider theme={theme}>
-    {/*
-      */}
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-        <MenuBar setConnections={setConnections} connections={connections()} />
-        <Grid container sx={{ flexGrow: 1, overflow: "auto" }}>
-          <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-            <ConnectionList
-              connections={connections()}
-              setConnections={connections => {
-                setConnections(connections);
-              }}
-              style={{ overflow: "auto" }}
-            />
-          </Grid>
-          <Grid item md={6} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-            <Viewport3D connection={null} scene={scene()} style={{ flexGrow: "1", height: "100%" }} />
-            {
-              // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
-            }
-          </Grid>
-          <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-              <SearchIcon />
-              <TextField
-                fullWidth
-                variant="standard"
-                placeholder="Filter AoIs"
-              />
-              <FilterIcon />
-            </Box>
-            {/*
-            <ImageList
-              style={{ flexGrow: "1", height: "100%", overflow: "auto" }}
-              connection={connection()}
-              onSelectionChanged={selectImage}
-            />
-            <Show when={selectedImage() !== null}>
-              <ROSImage
+      <ROSBridgeConnectionsProvider>
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <MenuBar />
+          <Grid container sx={{ flexGrow: 1, overflow: "auto" }}>
+            <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+            </Grid>
+            <Grid item md={6} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+              <Viewport3D connection={null} scene={scene()} style={{ flexGrow: "1", height: "100%" }} />
+              {
+                // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
+              }
+            </Grid>
+            <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                <SearchIcon />
+                <TextField
+                  fullWidth
+                  variant="standard"
+                  placeholder="Filter AoIs"
+                />
+                <FilterIcon />
+              </Box>
+              {/*
+              <ImageList
+                style={{ flexGrow: "1", height: "100%", overflow: "auto" }}
                 connection={connection()}
-                topic={selectedImage() as string}
-                width={200}
-                height={200}
+                onSelectionChanged={selectImage}
               />
-            </Show>
-            */}
+              <Show when={selectedImage() !== null}>
+                <ROSImage
+                  connection={connection()}
+                  topic={selectedImage() as string}
+                  width={200}
+                  height={200}
+                />
+              </Show>
+              */}
+            </Grid>
           </Grid>
-        </Grid>
-      </Box>
+        </Box>
+      </ROSBridgeConnectionsProvider>
     </ThemeProvider>
   );
 };

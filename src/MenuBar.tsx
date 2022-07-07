@@ -1,24 +1,33 @@
 import AppBar from "@suid/material/AppBar";
 import IconButton from "@suid/material/IconButton";
 import Toolbar from "@suid/material/Toolbar";
-import { Component, createSignal, Show } from "solid-js";
+import { Component, createSignal, For, Show } from "solid-js";
 import RobotIcon from "@suid/icons-material/SmartToy";
+import PowerIcon from "@suid/icons-material/Power";
 import List from "@suid/material/List";
 import Popover from "@suid/material/Popover";
 import ListItem from "@suid/material/ListItem";
 import ListItemButton from "@suid/material/ListItemButton";
 import Divider from "@suid/material/Divider";
 import ConnectionDialog from "./ConnectionDialog";
-import { ROSBridgeConnection } from "./ROSBridge";
+import { ConnectionStatus, ROSBridgeConnection } from "./ROSBridgeConnection";
+import { useConnectionList, useConnections, useConnectionStatus } from "./Connections";
+import ConnectionList from "./ConnectionList";
 
 export interface MenuBarProps {
-  connections: ROSBridgeConnection[];
-  setConnections: (connections: ROSBridgeConnection[]) => void;
+}
+
+function getConnectionStatusColor(status: ConnectionStatus) {
+  console.log(status);
+  switch (status) {
+    case "Not Connected": return "error";
+    case "Connecting": return "warning";
+    case "Connected": return "success";
+  }
 }
 
 const MenuBar: Component<MenuBarProps> = (props: MenuBarProps) => {
   const [connectionsButtonElement, setConnectionsButtonElement] = createSignal<HTMLButtonElement | null>(null);
-  const [newConnectionURL, setNewConnectionURL] = createSignal<string | null>(null);
   
   const handleClick = (
     event: MouseEvent & { currentTarget: HTMLButtonElement }
@@ -43,8 +52,9 @@ const MenuBar: Component<MenuBarProps> = (props: MenuBarProps) => {
           aria-label="menu"
           sx={{ mr: 2 }}
           onClick={handleClick}
+          title="Manage ROSBridge connections"
         >
-          <RobotIcon />
+          <PowerIcon />
         </IconButton>
         <Popover
           id={id()}
@@ -56,29 +66,10 @@ const MenuBar: Component<MenuBarProps> = (props: MenuBarProps) => {
             horizontal: "left",
           }}
         >
-          <List>
-            <ListItemButton
-              onClick={() => {
-                setNewConnectionURL("ws://localhost:3000");
-                setConnectionsButtonElement(null);
-              }}
-            >
-              Add Connection
-            </ListItemButton>
-          </List>
+          <ConnectionList close={() => setConnectionsButtonElement(null)} />
         </Popover>
       </Toolbar>
 
-      <ConnectionDialog
-        open={Boolean(newConnectionURL())}
-        url={newConnectionURL() as string}
-        setURL={url => {
-          if (url) {
-            props.setConnections([...props.connections, new ROSBridgeConnection(url)]);
-          }
-          setNewConnectionURL(null);
-        }}
-      />
     </AppBar>
   );
 }

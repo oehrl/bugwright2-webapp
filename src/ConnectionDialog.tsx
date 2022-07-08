@@ -16,9 +16,6 @@ const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
   const theme = useTheme();
   let textField: any;
 
-  console.log(props.url);
-  createEffect(() => console.log(props.url));
-
   return (
     <Modal
       open={!!props.url}

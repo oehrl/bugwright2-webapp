@@ -9,10 +9,12 @@ import Popover from "@suid/material/Popover";
 import ListItem from "@suid/material/ListItem";
 import ListItemButton from "@suid/material/ListItemButton";
 import Divider from "@suid/material/Divider";
-import ConnectionDialog from "./ConnectionDialog";
-import { ConnectionStatus, ROSBridgeConnection } from "./ROSBridgeConnection";
-import { useConnectionList, useConnections, useConnectionStatus } from "./Connections";
-import ConnectionList from "./ConnectionList";
+import ConnectionDialog from "../ConnectionDialog";
+import { ConnectionStatus, ROSBridgeConnection } from "../ROSBridgeConnection";
+import { useConnectionList, useConnections, useConnectionStatus } from "../Connections";
+import ConnectionList from "../ConnectionList";
+import PopoverListButton from "./PopoverListButton";
+import RobotsMenu from "./RobotsMenu";
 
 export interface MenuBarProps {
 }
@@ -68,6 +70,9 @@ const MenuBar: Component<MenuBarProps> = (props: MenuBarProps) => {
         >
           <ConnectionList close={() => setConnectionsButtonElement(null)} />
         </Popover>
+
+        <RobotsMenu />
+
       </Toolbar>
 
     </AppBar>

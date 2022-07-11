@@ -145,16 +145,18 @@ export function useTopicsWithType(url: string, type: string) {
   return topics.filter(topic => topic.type === type);
 }
 
-export function createTopicSubstription<T = any>(url: string|undefined, type: string) {
+export function createTopicSubstription<T = any>(url: string|undefined, topicId: string|undefined) {
   const connection = useConnection(url);
   const [message, setMessage] = createSignal<T | undefined>(undefined);
 
-  let topicSubscription = connection?.subscribe(type, setMessage);
+  let topicSubscription = topicId ? connection?.subscribe(topicId, setMessage) : undefined;
   createEffect(() => {
     if (topicSubscription) {
       connection?.unsubscribe(topicSubscription);
     }
-    topicSubscription = connection?.subscribe(type, setMessage);
+    if (topicId) {
+      topicSubscription = connection?.subscribe(topicId, setMessage);
+    }
   });
   onCleanup(() => topicSubscription ? connection?.unsubscribe(topicSubscription) : undefined);
 

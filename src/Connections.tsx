@@ -127,12 +127,25 @@ export function useTopics(url?: string) {
   return topics();
 }
 
+export function useTopicType(url?: string, topicName?: string) {
+  for (const topic of useTopics(url)) {
+    if (topic.id === topicName) {
+      return topic.type;
+    }
+  }
+}
+
+export function useTopicsWithTypes(url: string, types: string[]) {
+  const topics = useTopics(url);
+  return topics.filter(topic => types.indexOf(topic.type) !== -1);
+}
+
 export function useTopicsWithType(url: string, type: string) {
   const topics = useTopics(url);
   return topics.filter(topic => topic.type === type);
 }
 
-export function createTopicSubstription<T = any>(url: string, type: string) {
+export function createTopicSubstription<T = any>(url: string|undefined, type: string) {
   const connection = useConnection(url);
   const [message, setMessage] = createSignal<T | undefined>(undefined);
 
@@ -145,5 +158,5 @@ export function createTopicSubstription<T = any>(url: string, type: string) {
   });
   onCleanup(() => topicSubscription ? connection?.unsubscribe(topicSubscription) : undefined);
 
-  return message();
+  return message;
 }

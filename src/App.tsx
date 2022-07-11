@@ -11,6 +11,7 @@ import Viewport3D from './Viewport3D';
 import MenuBar from './MenuBar';
 import ROSBridgeConnectionsProvider from './Connections';
 import RobotListProvider from './Robot';
+import RobotOverview from './RobotOverview';
 
 const App: Component = () => {
   const [scene, setScene] = createSignal(new Scene());
@@ -52,6 +53,7 @@ const App: Component = () => {
             <MenuBar />
             <Grid container sx={{ flexGrow: 1, overflow: "auto" }}>
               <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+                <RobotOverview />
               </Grid>
               <Grid item md={6} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
                 <Viewport3D connection={null} scene={scene()} style={{ flexGrow: "1", height: "100%" }} />

@@ -1,17 +1,41 @@
-import { useTheme } from "@suid/material";
-import Box from "@suid/material/Box";
-import Button from "@suid/material/Button";
-import Modal from "@suid/material/Modal";
-import TextField from "@suid/material/TextField";
-import { Component, createEffect, createSignal } from "solid-js";
+import { Component, createEffect, JSX, Show } from "solid-js";
+import { createTopicSubstription, useTopicType } from "./Connections";
 import { sensor_msgs } from "./ros/sensor_msgs";
-import { ROSBridgeConnection } from "./ROSBridge";
+
+export interface RawROSImageProps {
+  message?: sensor_msgs.Image;
+  style?: JSX.CSSProperties;
+}
+
+const RawROSImage: Component<RawROSImageProps> = (props) => {
+};
+
+export interface CompressedROSImageProps {
+  connection?: string;
+  topic?: string;
+  style?: JSX.CSSProperties;
+}
+
+const CompressedROSImage: Component<CompressedROSImageProps> = (props) => {
+  var imageReference: any;
+  const compressedImage = createTopicSubstription<sensor_msgs.CompressedImage>(props.connection, props.topic)
+  // createEffect(() => {
+  //   imageReference.src = `data:image/jpeg;base64, ${props.message?.data}`;
+  // });
+
+  return (
+    <img
+      ref={imageReference}
+      style={props.style}
+      src={`data:image/jpeg;base64, ${compressedImage()?.data}`}
+    />
+  );
+};
 
 export interface ROSImageProps {
+  connection?: string;
   topic: string;
-  width: number;
-  height: number;
-  connection: ROSBridgeConnection | null;
+  style?: JSX.CSSProperties;
 }
 
 const ROSImage: Component<ROSImageProps> = (props) => {
@@ -19,20 +43,24 @@ const ROSImage: Component<ROSImageProps> = (props) => {
   // const [isConnecting, setIsConnecting] = createSignal(false);
   // const theme = useTheme();
   // let textField: any;
-  var imageReference: any;
-
-  createEffect(() => {
-    props.connection?.subscribe<sensor_msgs.CompressedImage>(props.topic, image => {
-      imageReference.src = `data:image/jpeg;base64, ${image.data}`;
-    });
-  });
+  var canvasReference: any;
 
   return (
-    <img
-      ref={imageReference}
-      width={props.width}
-      height={props.height}
-    />
+    <>
+      <Show when={useTopicType(props.connection, props.topic) === "sensor_msgs/CompressedImage"}>
+        <CompressedROSImage
+          style={props.style}
+          connection={props.connection}
+          topic={props.topic}
+        />
+      </Show>
+      <Show when={useTopicType(props.connection, props.topic) === "sensor_msgs/Image"}>
+        <canvas
+          ref={canvasReference}
+          style={props.style}
+        />
+      </Show>
+    </>
   );
 };
 

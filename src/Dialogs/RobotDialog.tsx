@@ -1,8 +1,9 @@
 import Button from "@suid/material/Button";
 import FormControl from "@suid/material/FormControl";
 import TextField from "@suid/material/TextField";
-import { Component, createEffect, createSignal, For, Show } from "solid-js";
+import { Component, createEffect, createSignal, For, Show, useContext } from "solid-js";
 import Dialog from ".";
+import { ConnectionsContext, topicsWithTypes } from "../Connections";
 import { useRobot, useRobotList } from "../Robot";
 
 export interface RobotDialogProps {
@@ -11,6 +12,8 @@ export interface RobotDialogProps {
 }
 
 const RobotDialog: Component<RobotDialogProps> = (props) => {
+  const connectionsContext = useContext(ConnectionsContext);
+
   const robotList = useRobotList();
   const robot = () => typeof props.index === "number" ? useRobot(props.index) : undefined;
 
@@ -45,14 +48,14 @@ const RobotDialog: Component<RobotDialogProps> = (props) => {
           onChange={element => setConnection(element.currentTarget.value)}
         >
           <option></option>
-          <For each={connections()}>
+          <For each={Object.values(connectionsContext?.connections || {})}>
           {
             availableConnection => 
               <option
-                selected={availableConnection.url === connection()}
+                selected={availableConnection.rosbridgeConnection.url === connection()}
               >
               {
-                availableConnection.url
+                availableConnection.rosbridgeConnection.url
               }
               </option>
           }
@@ -62,8 +65,16 @@ const RobotDialog: Component<RobotDialogProps> = (props) => {
           onChange={element => setPoseTopic(element.currentTarget.value)}
         >
           <option></option>
-          <For each={useTopicsWithTypes(connection(), ["geometry_msgs/PointStamped", "geometry_msgs/PoseStamped"])}>
+          <Show when={connectionsContext?.connections[connection() || ""]}>
           {
+          connection =>
+            <For
+              each={topicsWithTypes(
+                connection,
+                ["geometry_msgs/PointStamped", "geometry_msgs/PoseStamped"])
+              }
+            >
+            {
             topic => 
               <option
                 selected={topic.id === poseTopic()}
@@ -72,8 +83,10 @@ const RobotDialog: Component<RobotDialogProps> = (props) => {
                 topic.id
               }
               </option>
+            }
+            </For>
           }
-          </For>
+          </Show>
         </select>
         <Button
           variant="text"

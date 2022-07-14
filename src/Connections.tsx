@@ -1,7 +1,7 @@
 import { createContext, createEffect, createSignal, onCleanup, PropsWithChildren, useContext } from "solid-js";
 import { createStore, SetStoreFunction, Store } from 'solid-js/store';
-import Event from "./Event";
-import { ConnectionStatus, ROSBridgeConnection } from "./ROSBridgeConnection";
+import { Topics } from "./ROS/rosapi";
+import RosbridgeConnection, { ConnectionStatus } from "./Rosbridge/Connection";
 
 export interface ROSTopic {
   id: string;
@@ -9,14 +9,23 @@ export interface ROSTopic {
 }
 
 export interface Connection {
-  socket: WebSocket;
+  rosbridgeConnection: RosbridgeConnection;
   status: ConnectionStatus;
+  topics: ROSTopic[];
+}
+
+export function topicsWithTypes(connection: Connection, types: string[]) {
+  return connection.topics.filter(topic => types.indexOf(topic.type) !== -1);
+}
+
+export function topicsWithType(connection: Connection, type: string) {
+  return connection.topics.filter(topic => topic.type === type);
 }
 
 export interface ConnectionsContextValue {
   connections: Store<Connections>,
   setConnections: SetStoreFunction<Connections>
-  connect(url: string): void;
+  connect(url: string): string;
   disconnect(url: string): void;
   remove(url: string): void;
 }
@@ -33,30 +42,47 @@ export default function ROSBridgeConnectionsProvider(props: PropsWithChildren) {
       connections,
       setConnections,
       connect: url => {
-        const socket = new WebSocket(url);
-        setConnections(socket.url, {
-          socket,
-          status: "Connecting",
-        });
-        socket.onopen = () => {
-          setConnections(socket.url, "status", "Connected");
-        };
-        socket.onerror = () => {
+        const rosbridgeConnection = new RosbridgeConnection(url);
+        if (rosbridgeConnection.url in connections) {
+          connections[rosbridgeConnection.url].rosbridgeConnection.close();
         }
-        socket.onclose = () => {
-          setConnections(socket.url, "status", "Not Connected");
-        };
+        setConnections(rosbridgeConnection.url, {
+          rosbridgeConnection,
+          status: "Connecting",
+          topics: [],
+        });
+        rosbridgeConnection.onStatusChange.subscribe(
+          status => {
+            if (!(rosbridgeConnection.url in connections)) {
+              return;
+            }
+            setConnections(rosbridgeConnection.url, "status", status);
+            if (status === "Connected") {
+              rosbridgeConnection.callService<Topics>("/rosapi/topics", response => {
+                const topics: ROSTopic[] = [];
+                for (let i = 0; i < response.topics.length; ++i) {
+                  topics.push({
+                    id: response.topics[i],
+                    type: response.types[i],
+                  });
+                }
+                setConnections(rosbridgeConnection.url, "topics", topics);
+              });
+            }
+          }
+        );
+        return rosbridgeConnection.url;
       },
       disconnect: url => {
         const connection = connections[url];
         if (connection) {
-          connection.socket.close();
+          connection.rosbridgeConnection.close();
         }
       },
       remove: url => {
         const connection = connections[url];
         if (connection) {
-          connection.socket.close();
+          connection.rosbridgeConnection.close();
           setConnections(url, undefined as unknown as Connection);
         }
       }

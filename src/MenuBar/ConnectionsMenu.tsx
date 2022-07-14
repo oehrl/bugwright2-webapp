@@ -6,20 +6,40 @@ import DeleteIcon from "@suid/icons-material/Delete";
 import Divider from "@suid/material/Divider";
 import PopoverListButton from "./PopoverListButton";
 import { ConnectionsContext } from "../Connections";
-import ConnectionDialog from "../Dialogs/ConnectionDialog";
 import ConnectionIndicator from "./ConnectionIndicator";
+import NewConnectionDialog from "../Dialogs/NewConnectionDialog";
+import ConnectionDialog from "../Dialogs/ConnectionDialog";
 
 const ConnectionsMenu: Component = () => {
   const connectionsContext = useContext(ConnectionsContext);
+  const [isCreatingNewConnection, createNewConnection] = createSignal(false);
   const [selectedConnection, selectConnection] = createSignal<string>();
 
   return (
     <>
-      <ConnectionDialog
-        url={selectedConnection()}
-        close={() => selectConnection()}
-        save={url => connectionsContext?.connect(url)}
-      />
+      <Show when={isCreatingNewConnection()}>
+        <NewConnectionDialog
+          close={() => createNewConnection(false)}
+          save={url => {
+            createNewConnection(false);
+            selectConnection(connectionsContext?.connect(url))
+          }}
+        />
+      </Show>
+      <Show when={selectedConnection()}>
+        {
+        selection =>
+          <Show when={connectionsContext?.connections[selection]}>
+          {
+          connection =>
+            <ConnectionDialog
+              connection={connection}
+              close={() => selectConnection()}
+            />
+          }
+          </Show>
+        }
+      </Show>
       <PopoverListButton>
         <For each={Object.keys(connectionsContext?.connections || {})}>
           {
@@ -27,13 +47,13 @@ const ConnectionsMenu: Component = () => {
               <Show when={connectionsContext?.connections[url]}>
               {
                 connection => 
-                  <ListItem id={connection.socket.url}>
+                  <ListItem id={connection.rosbridgeConnection.url}>
                     <ConnectionIndicator connection={connection} />
                     <ListItemButton
                       onClick={() => selectConnection(url)}
                     >
                     {
-                      connection.socket.url
+                      connection.rosbridgeConnection.url
                     }
                     </ListItemButton>
                     <IconButton
@@ -55,7 +75,7 @@ const ConnectionsMenu: Component = () => {
           <Divider />
         </Show>
         <ListItemButton
-          onClick={() => selectConnection("")}
+          onClick={() => createNewConnection(true)}
         >
           Add Connection
         </ListItemButton>

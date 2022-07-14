@@ -13,19 +13,30 @@ export interface RobotPreviewProps {
 const RobotPreview: Component<RobotPreviewProps> = (props) => {
   // const [imageTopics, setImageTopics] = createSignal();
   const [imageIndex, setImageIndex] = createSignal(0);
-  const imageTopics = useTopicsWithTypes(props.robot.connection, ["sensor_msgs/Image", "sensor_msgs/CompressedImage"]);
+  // const imageTopics = useTopicsWithTypes(props.robot.connection, ["sensor_msgs/Image", "sensor_msgs/CompressedImage"]);
 
-  const nextImage = () => {
-    console.log(`Current index: ${imageIndex()}`);
-    console.log(`Image topic count: ${imageTopics().length}`);
-    setImageIndex((imageIndex() + 1) % imageTopics().length);
-    console.log(`Current index: ${imageIndex()}`);
-  }
-  const previousImage = () => {
-    console.log(`Current index: ${imageIndex()}`);
-    setImageIndex(imageIndex() > 0 ? imageIndex() - 1 : imageTopics().length - 1);
-    console.log(`Current index: ${imageIndex()}`);
-  }
+  // const nextImage = () => {
+  //   console.log(`Current index: ${imageIndex()}`);
+  //   console.log(`Image topic count: ${imageTopics().length}`);
+  //   setImageIndex((imageIndex() + 1) % imageTopics().length);
+  //   console.log(`Current index: ${imageIndex()}`);
+  // }
+  // const previousImage = () => {
+  //   console.log(`Current index: ${imageIndex()}`);
+  //   setImageIndex(imageIndex() > 0 ? imageIndex() - 1 : imageTopics().length - 1);
+  //   console.log(`Current index: ${imageIndex()}`);
+  // }
+  //
+  return (
+    <Box
+      sx={{
+        width: "100%",
+      }}
+    >
+      <h3>{ props.robot.name }
+      </h3>
+    </Box>
+  );
 
   return (
     <Box

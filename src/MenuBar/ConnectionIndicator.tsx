@@ -3,8 +3,8 @@ import CircleIcon from "@suid/icons-material/Circle";
 import ConnectIcon from "@suid/icons-material/Power";
 import DisconnectIcon from "@suid/icons-material/PowerOff";
 import { Connection, ConnectionsContext } from "../Connections";
-import { ConnectionStatus } from "../ROSBridgeConnection";
 import { Component, createSignal, Match, Show, Switch, useContext } from "solid-js";
+import { ConnectionStatus } from "../Rosbridge/Connection";
 
 export interface ConnectionIndicatorProps  {
   connection: Connection;
@@ -34,8 +34,8 @@ const ConnectionIndicator: Component<ConnectionIndicatorProps> = (props) => {
       onMouseLeave={() => setIsHovering(false)}
       onClick={() => 
         props.connection.status === "Connected"
-          ? connectionsContext?.disconnect(props.connection.socket.url)
-          : connectionsContext?.connect(props.connection.socket.url)
+          ? connectionsContext?.disconnect(props.connection.rosbridgeConnection.url)
+          : connectionsContext?.connect(props.connection.rosbridgeConnection.url)
       }
       title={ props.connection.status === "Connected" ? "Disconnect" : "Connect" }
     >

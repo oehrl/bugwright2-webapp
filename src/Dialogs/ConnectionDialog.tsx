@@ -1,49 +1,59 @@
-import Button from "@suid/material/Button";
-import FormControl from "@suid/material/FormControl";
+import Link from "@suid/material/Link";
+import List from "@suid/material/List";
+import ListItem from "@suid/material/ListItem";
 import TextField from "@suid/material/TextField";
-import { Component, createSignal, useContext } from "solid-js";
+import { Component, For } from "solid-js";
 import Dialog from ".";
-import { ConnectionsContext } from "../Connections";
+import { Connection } from "../Connections";
 
 export interface ConnectionDialogProps {
-  url?: string;
+  connection: Connection;
   close: () => void;
-  save: (url: string) => void;
 }
 
 const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
-  const connectionsContext = useContext(ConnectionsContext);
-  const connection = () => 
-    typeof(props.url) === "string" && props.url !== "" ?
-      connectionsContext?.connections[props.url] : undefined;
-
-  const [url, setURL] = createSignal(
-    connection()?.socket?.url || "ws://localhost:9090"
-  );
+  const getMessageTypeURL = (type: string, rosversion?: string) => {
+    const [pkg, message] = type.split("/");
+    return `http://docs.ros.org/en/${rosversion || "melodic"}/api/${pkg}/html/msg/${message}.html`;
+  };
 
   return (
     <Dialog
-      open={typeof props.url !== "undefined"}
+      open={true}
       title="Connection Details"
       close={props.close}
+      width={800}
     >
-      <FormControl>
-        <TextField
-          label="URL"
-          variant="standard"
-          value={url()}
-          onChange={(_, url) => setURL(url)}
-          InputProps={{
-            readOnly: !!connection()?.socket
-          }}
-        />
-        <Button
-          variant="text"
-          onClick={() => props.save(url())}
-        >
-          Save
-        </Button>
-      </FormControl>
+      <TextField
+        label="URL"
+        variant="standard"
+        value={props.connection.rosbridgeConnection.url}
+        InputProps={{
+          readOnly: true
+        }}
+      />
+      <h3>Topics</h3>
+      <List>
+        <For each={props.connection.topics}>
+        {
+          topic => 
+            <ListItem sx={{ whiteSpace: "nowrap" }}>
+            {
+              topic.id
+            }
+              :&emsp;
+              <Link
+                href={getMessageTypeURL(topic.type)}
+                target="_blank"
+              >
+              {
+                topic.type
+              }
+              </Link>
+            </ListItem>
+        }
+        </For>
+      </List>
     </Dialog>
   );
 };

@@ -11,15 +11,15 @@ export interface ROSTopic {
 export interface Connection {
   rosbridgeConnection: RosbridgeConnection;
   status: ConnectionStatus;
-  topics: ROSTopic[];
+  topics: {[topic: string]: string};
 }
 
 export function topicsWithTypes(connection: Connection, types: string[]) {
-  return connection.topics.filter(topic => types.indexOf(topic.type) !== -1);
+  return Object.keys(connection.topics).filter(topic => types.indexOf(connection.topics[topic]) !== -1);
 }
 
 export function topicsWithType(connection: Connection, type: string) {
-  return connection.topics.filter(topic => topic.type === type);
+  return Object.keys(connection.topics).filter(topic => connection.topics[topic] === type);
 }
 
 export interface ConnectionsContextValue {
@@ -49,7 +49,7 @@ export default function ROSBridgeConnectionsProvider(props: PropsWithChildren) {
         setConnections(rosbridgeConnection.url, {
           rosbridgeConnection,
           status: "Connecting",
-          topics: [],
+          topics: {},
         });
         rosbridgeConnection.onStatusChange.subscribe(
           status => {
@@ -59,12 +59,9 @@ export default function ROSBridgeConnectionsProvider(props: PropsWithChildren) {
             setConnections(rosbridgeConnection.url, "status", status);
             if (status === "Connected") {
               rosbridgeConnection.callService<Topics>("/rosapi/topics", response => {
-                const topics: ROSTopic[] = [];
+                const topics: {[topic: string]: string} = {};
                 for (let i = 0; i < response.topics.length; ++i) {
-                  topics.push({
-                    id: response.topics[i],
-                    type: response.types[i],
-                  });
+                  topics[response.topics[i]] = response.types[i];
                 }
                 setConnections(rosbridgeConnection.url, "topics", topics);
               });
@@ -91,6 +88,19 @@ export default function ROSBridgeConnectionsProvider(props: PropsWithChildren) {
     </ConnectionsContext.Provider>
   );
 }
+
+export function useConnectionsContext() {
+  return useContext(ConnectionsContext);
+}
+
+export function connection(connections: ConnectionsContextValue, url?: string) {
+}
+
+// export function useConnections() {
+//   const context = useConnectionsContext();
+//   return context?.connections || {};
+// }
+
 
 // export function useConnectionStatus(url?: string) {
 //   const connection = useConnection(url);
@@ -142,20 +152,15 @@ export default function ROSBridgeConnectionsProvider(props: PropsWithChildren) {
 //   return () => topics()?.filter(topic => topic.type === type);
 // }
 
-// export function createTopicSubstription<T = any>(url: string|undefined, topicId: string|undefined) {
-//   const connection = useConnection(url);
-//   const [message, setMessage] = createSignal<T | undefined>(undefined);
+export function createTopicSubstription<T = any>(connection: Connection, topic: string) {
+  const [message, setMessage] = createSignal<T | undefined>(undefined);
 
-//   let topicSubscription = topicId ? connection()?.subscribe(topicId, setMessage) : undefined;
-//   createEffect(() => {
-//     if (topicSubscription) {
-//       connection()?.unsubscribe(topicSubscription);
-//     }
-//     if (topicId) {
-//       topicSubscription = connection()?.subscribe(topicId, setMessage);
-//     }
-//   });
-//   onCleanup(() => topicSubscription ? connection()?.unsubscribe(topicSubscription) : undefined);
+  let topicSubscription = connection.rosbridgeConnection.subscribe(topic, setMessage);
+  createEffect(() => {
+    connection.rosbridgeConnection.unsubscribe(topicSubscription);
+    topicSubscription = connection.rosbridgeConnection.subscribe(topic, setMessage);
+  });
+  onCleanup(() => connection.rosbridgeConnection.unsubscribe(topicSubscription));
 
-//   return message;
-// }
+  return message;
+}

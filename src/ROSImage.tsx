@@ -1,9 +1,10 @@
 import { Component, createEffect, createSignal, JSX, Show } from "solid-js";
+import { Connection, createTopicSubstription } from "./Connections";
 import { sensor_msgs } from "./ros/sensor_msgs";
 
 export interface RawROSImageProps {
-  connection?: string;
-  topic?: string;
+  connection: Connection;
+  topic: string;
   style?: JSX.CSSProperties;
 }
 
@@ -57,8 +58,8 @@ const RawROSImage: Component<RawROSImageProps> = (props) => {
 };
 
 export interface CompressedROSImageProps {
-  connection?: string;
-  topic?: string;
+  connection: Connection;
+  topic: string;
   style?: JSX.CSSProperties;
 }
 
@@ -67,30 +68,37 @@ const CompressedROSImage: Component<CompressedROSImageProps> = (props) => {
     createTopicSubstription<sensor_msgs.CompressedImage>(props.connection, props.topic)
 
   return (
-    <img
-      style={props.style}
-      src={`data:image/jpeg;base64, ${compressedImage()?.data}`}
-    />
+    <Show when={compressedImage()} fallback="Loading...">
+    {
+    compressedImage =>
+      <img
+        style={props.style}
+        src={`data:image/jpeg;base64, ${compressedImage.data}`}
+      />
+    }
+    </Show>
   );
 };
 
 export interface ROSImageProps {
-  connection?: string;
+  connection: Connection;
   topic: string;
   style?: JSX.CSSProperties;
 }
 
 const ROSImage: Component<ROSImageProps> = (props) => {
+  const topicType = () => props.connection.topics[props.topic];
+
   return (
     <>
-      <Show when={useTopicType(props.connection, props.topic) === "sensor_msgs/CompressedImage"}>
+      <Show when={topicType() === "sensor_msgs/CompressedImage"}>
         <CompressedROSImage
           style={props.style}
           connection={props.connection}
           topic={props.topic}
         />
       </Show>
-      <Show when={useTopicType(props.connection, props.topic) === "sensor_msgs/Image"}>
+      <Show when={topicType() === "sensor_msgs/Image"}>
         <RawROSImage
           style={props.style}
           connection={props.connection}

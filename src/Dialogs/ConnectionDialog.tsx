@@ -34,23 +34,23 @@ const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
       />
       <h3>Topics</h3>
       <List>
-        <For each={props.connection.topics}>
+        <For each={Object.keys(props.connection.topics)}>
         {
-          topic => 
-            <ListItem sx={{ whiteSpace: "nowrap" }}>
+        topic => 
+          <ListItem sx={{ whiteSpace: "nowrap" }}>
+          {
+            topic
+          }
+            :&emsp;
+            <Link
+              href={getMessageTypeURL(props.connection.topics[topic])}
+              target="_blank"
+            >
             {
-              topic.id
+              props.connection.topics[topic]
             }
-              :&emsp;
-              <Link
-                href={getMessageTypeURL(topic.type)}
-                target="_blank"
-              >
-              {
-                topic.type
-              }
-              </Link>
-            </ListItem>
+            </Link>
+          </ListItem>
         }
         </For>
       </List>

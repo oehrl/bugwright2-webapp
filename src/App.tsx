@@ -4,7 +4,7 @@ import Grid from '@suid/material/Grid';
 import SearchIcon from "@suid/icons-material/Search";
 import FilterIcon from "@suid/icons-material/FilterAlt";
 import TextField from '@suid/material/TextField';
-import { Component, createSignal, onCleanup, Show } from 'solid-js';
+import { Component, createSignal } from 'solid-js';
 import { AmbientLight, DirectionalLight, Mesh, MeshPhongMaterial, PlaneGeometry, Scene } from 'three';
 
 import Viewport3D from './Viewport3D';

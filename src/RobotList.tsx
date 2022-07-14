@@ -4,9 +4,8 @@ import ListItem from "@suid/material/ListItem";
 import ListItemButton from "@suid/material/ListItemButton";
 import { Component, For, JSX, Show } from "solid-js";
 import DeleteIcon from "@suid/icons-material/Delete";
-import CircleIcon from "@suid/icons-material/Circle";
 import { useRobotList, useRobots } from "./Robot";
-import RobotDialog from "./RobotDialog";
+import RobotDialog from "./Dialogs/RobotDialog";
 import Divider from "@suid/material/Divider";
 
 export interface RobotListProps  {

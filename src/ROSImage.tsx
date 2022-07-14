@@ -1,5 +1,4 @@
 import { Component, createEffect, createSignal, JSX, Show } from "solid-js";
-import { createTopicSubstription, useTopicType } from "./Connections";
 import { sensor_msgs } from "./ros/sensor_msgs";
 
 export interface RawROSImageProps {

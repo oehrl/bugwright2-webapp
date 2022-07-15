@@ -1,18 +1,16 @@
 import { Component, JSX, onCleanup, onMount } from "solid-js";
 import { Clock, OrthographicCamera, PerspectiveCamera, Scene, WebGLRenderer } from "three";
-import { mission_manager } from "./bugwright2/mission_manager";
+// import { mission_manager } from "./bugwright2/mission_manager";
 import FirstPersonControls from "./FirstPersonControls";
-import { ROSBridgeConnection } from "./ROSBridge";
 
-export interface Viewport3DProps {
+export interface ViewportProps {
   scene: Scene;
   style?: JSX.CSSProperties | string;
   cameraType?: "orthographic" | "perspective";
-  connection: ROSBridgeConnection | null;
+  // connection: ROSBridgeConnection | null;
 }
 
-const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
-
+const Viewport: Component<ViewportProps> = (props: ViewportProps) => {
   let canvas: any;
   onMount(() => {
     const camera =
@@ -70,7 +68,6 @@ const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
         }
       }
 
-
       renderer.render(props.scene, camera);
     }
 
@@ -86,4 +83,4 @@ const Viewport3D: Component<Viewport3DProps> = (props: Viewport3DProps) => {
   );
 };
 
-export default Viewport3D;
+export default Viewport;

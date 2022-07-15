@@ -4,46 +4,30 @@ import Grid from '@suid/material/Grid';
 import SearchIcon from "@suid/icons-material/Search";
 import FilterIcon from "@suid/icons-material/FilterAlt";
 import TextField from '@suid/material/TextField';
-import { Component, createSignal } from 'solid-js';
-import { AmbientLight, DirectionalLight, Mesh, MeshPhongMaterial, PlaneGeometry, Scene } from 'three';
+import { Component } from 'solid-js';
 
-import Viewport3D from './Viewport3D';
 import MenuBar from './MenuBar';
 import ROSBridgeConnectionsProvider from './Connections';
 import RobotListProvider from './Robot';
 import RobotOverview from './RobotOverview';
+import Viewport from './Three.js/Viewport';
+import { DirectionalLight, Mesh, MeshPhongMaterial, PlaneGeometry, Scene } from 'three';
+import { AmbientLight } from './Three.js/AmbientLight';
+import { Skybox } from './Three.js/Skybox';
+import { Water } from './Three.js/Water';
 
 const App: Component = () => {
-  const [scene, setScene] = createSignal(new Scene());
-
-  const planeGeometry = new PlaneGeometry(100, 100, 100, 100);
-  planeGeometry.computeVertexNormals();
-  const planeMaterial = new MeshPhongMaterial({
-    color: 0x0000f2,
-    wireframe: true
-  });
-
-  const plane = new Mesh(planeGeometry, planeMaterial);
-  // plane.translateOnAxis(new Vector3(1, 0, 1), 5);
-  // plane.translateY(-10);
-  plane.rotateX(Math.PI * 0.5);
-  scene().add(plane);
+  const scene = new Scene();
 
   const light = new DirectionalLight(0xffffff, 0.8);
   light.position.set(0.1, 1, 2.0);
-  scene().add(light);
-
-  const ambientLight = new AmbientLight(0xffffff, 0.3);
-  scene().add(ambientLight);
+  scene.add(light);
 
   const theme = createTheme({
     palette: {
       mode: "dark",
     },
   });
-
-  // const [selectedIndex, selectIndex] = createSignal<number|null>(null);
-  // const [selectedImage, selectImage] = createSignal<string|null>(null);
 
   return (
     <ThemeProvider theme={theme}>
@@ -56,7 +40,10 @@ const App: Component = () => {
                 <RobotOverview />
               </Grid>
               <Grid item md={6} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-                <Viewport3D connection={null} scene={scene()} style={{ flexGrow: "1", height: "100%" }} />
+                <Skybox scene={scene} baseURL="/src/assets/skyboxes/clouds" />
+                <Water scene={scene} waterNormalsTexture="/src/assets/waternormals.jpg" width={10000} height={10000} />
+                <AmbientLight scene={scene} intensity={0.3} />
+                <Viewport scene={scene} style={{ flexGrow: "1", height: "100%" }} />
                 {
                   // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
                 }

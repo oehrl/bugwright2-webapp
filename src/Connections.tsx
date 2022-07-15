@@ -157,10 +157,10 @@ export function createTopicSubstription<T = any>(connection: Connection, topic: 
 
   let topicSubscription = connection.rosbridgeConnection.subscribe(topic, setMessage);
   createEffect(() => {
-    connection.rosbridgeConnection.unsubscribe(topicSubscription);
+    topicSubscription.unsubscribe();
     topicSubscription = connection.rosbridgeConnection.subscribe(topic, setMessage);
   });
-  onCleanup(() => connection.rosbridgeConnection.unsubscribe(topicSubscription));
+  onCleanup(() => topicSubscription.unsubscribe());
 
   return message;
 }

@@ -70,19 +70,6 @@ export default class RosbridgeConnection {
     return this.topicCallbacks[topic].subscribe(callback);
   }
 
-  unsubscribe(subscription: EventSubscription) {
-    subscription.unsubscribe();
-    for (const topic of Object.keys(this.topicCallbacks)) {
-      if (this.topicCallbacks[topic].subscriptionCount === 0) {
-        this.sendMessage({
-          op: "unsubscribe",
-          topic
-        });
-        delete this.topicCallbacks[topic];
-      }
-    }
-  }
-
   callService<T = any, ArgumentType = any>(service: string, callback: (values: T) => void, args?: ArgumentType) {
     if (service in this.serviceCallbacks) {
       this.serviceCallbacks[service].push(callback);

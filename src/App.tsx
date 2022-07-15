@@ -15,6 +15,7 @@ import { DirectionalLight, Mesh, MeshPhongMaterial, PlaneGeometry, Scene } from 
 import { AmbientLight } from './Three.js/AmbientLight';
 import { Skybox } from './Three.js/Skybox';
 import { Water } from './Three.js/Water';
+import RobotMeshes from './BugWright2/RobotMeshes';
 
 const App: Component = () => {
   const scene = new Scene();
@@ -39,15 +40,17 @@ const App: Component = () => {
               <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
                 <RobotOverview />
               </Grid>
-              <Grid item md={6} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+              <Grid item md={9} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
                 <Skybox scene={scene} baseURL="/src/assets/skyboxes/clouds" />
                 <Water scene={scene} waterNormalsTexture="/src/assets/waternormals.jpg" width={10000} height={10000} />
                 <AmbientLight scene={scene} intensity={0.3} />
+                <RobotMeshes scene={scene} />
                 <Viewport scene={scene} style={{ flexGrow: "1", height: "100%" }} />
                 {
                   // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
                 }
               </Grid>
+              {/*
               <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
                   <SearchIcon />
@@ -58,22 +61,8 @@ const App: Component = () => {
                   />
                   <FilterIcon />
                 </Box>
-                {/*
-                <ImageList
-                  style={{ flexGrow: "1", height: "100%", overflow: "auto" }}
-                  connection={connection()}
-                  onSelectionChanged={selectImage}
-                />
-                <Show when={selectedImage() !== null}>
-                  <ROSImage
-                    connection={connection()}
-                    topic={selectedImage() as string}
-                    width={200}
-                    height={200}
-                  />
-                </Show>
-                */}
               </Grid>
+              */}
             </Grid>
           </Box>
         </RobotListProvider>

@@ -36,7 +36,8 @@ export function Water(props: WaterProps) {
         sunColor: 0xffffff,
         waterColor: 0x001e0f,
         distortionScale: 3.7,
-        fog: props.scene.fog !== undefined
+        fog: props.scene.fog !== undefined,
+        alpha: 0.1,
       }
     );
     props.scene.add(water);

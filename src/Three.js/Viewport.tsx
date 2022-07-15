@@ -1,16 +1,25 @@
-import { Component, JSX, onCleanup, onMount } from "solid-js";
+import Button from "@suid/material/Button";
+import Box from "@suid/system/Box";
+import { Component, createSignal, JSX, onCleanup, onMount } from "solid-js";
 import { Clock, OrthographicCamera, PerspectiveCamera, Scene, WebGLRenderer } from "three";
 // import { mission_manager } from "./bugwright2/mission_manager";
 import FirstPersonControls from "./FirstPersonControls";
 
 export interface ViewportProps {
   scene: Scene;
-  style?: JSX.CSSProperties | string;
+  style?: JSX.CSSProperties;
   cameraType?: "orthographic" | "perspective";
   // connection: ROSBridgeConnection | null;
 }
 
 const Viewport: Component<ViewportProps> = (props: ViewportProps) => {
+  const [vrSupport, setVRSupport] = createSignal(false);
+  const [framerate, setFramerate] = createSignal<number>();
+
+  const xr = navigator.xr;
+  xr?.isSessionSupported("immersive-vr").then(support => setVRSupport(support));
+
+
   let canvas: any;
   onMount(() => {
     const camera =
@@ -29,6 +38,13 @@ const Viewport: Component<ViewportProps> = (props: ViewportProps) => {
     }
     const clock = new Clock(true);
 
+    let frames = 0;
+    const framerateClock = new Clock(true);
+    framerateClock.start();
+    let framerateInterval = setInterval(() => {
+      setFramerate(Math.round(frames / framerateClock.getDelta()));
+      frames = 0;
+    }, 1000);
     let frame = requestAnimationFrame(render);
 
 
@@ -47,7 +63,8 @@ const Viewport: Component<ViewportProps> = (props: ViewportProps) => {
 
     function render() {
       frame = requestAnimationFrame(render);
-      controls.update(clock.getDelta());
+      const deltaTime = clock.getDelta();
+      controls.update(deltaTime);
 
       const width = Math.round(canvas.clientWidth);
       const height = Math.round(canvas.clientHeight);
@@ -69,6 +86,7 @@ const Viewport: Component<ViewportProps> = (props: ViewportProps) => {
       }
 
       renderer.render(props.scene, camera);
+      ++frames;
     }
 
     onCleanup(() => {
@@ -77,9 +95,50 @@ const Viewport: Component<ViewportProps> = (props: ViewportProps) => {
     });
   });
 
+  const switchToVR = async () => {
+    const session = await xr?.requestSession("immersive-vr", {
+    });
+    console.log(session);
+    const renderFrame = () => {
+      console.log("Rendering");
+      session?.requestAnimationFrame(renderFrame);
+    }
+    session?.requestAnimationFrame(renderFrame);
+  };
+
   return (
-    <canvas ref={canvas} style={props.style}>
-    </canvas>
+    <div style={{...props.style, position: "relative"}}>
+      <canvas ref={canvas} style={{ height: "100%", width: "100%" }}>
+      </canvas>
+      <Box
+        sx={{
+          margin: "0.5em",
+          position: "absolute",
+          top: 0,
+          right: 0,
+          background: "black",
+          opacity: 0.7,
+        }}
+      >
+      {
+        framerate()
+      }
+      </Box>
+      <Button
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          right: 0,
+        }}
+        disabled={!vrSupport()}
+        onClick={switchToVR}
+        title={
+          vrSupport() ? "Switch to VR mode" : "VR mode not available"
+        }
+      >
+        VR
+      </Button>
+    </div>
   );
 };
 

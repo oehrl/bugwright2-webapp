@@ -77,10 +77,10 @@ const RobotDialog: Component<RobotDialogProps> = (props) => {
             {
             topic => 
               <option
-                selected={topic.id === poseTopic()}
+                selected={topic === poseTopic()}
               >
               {
-                topic.id
+                topic
               }
               </option>
             }
@@ -94,6 +94,7 @@ const RobotDialog: Component<RobotDialogProps> = (props) => {
             robotList.update(props.index as number, {
               name: name(),
               connection: connection(),
+              poseTopic: poseTopic(),
             });
             props.close();
           }}

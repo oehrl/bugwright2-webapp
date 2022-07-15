@@ -27,18 +27,18 @@ const ConnectionsMenu: Component = () => {
         />
       </Show>
       <Show when={selectedConnection()}>
+      {
+      selection =>
+        <Show when={connectionsContext?.connections[selection]}>
         {
-        selection =>
-          <Show when={connectionsContext?.connections[selection]}>
-          {
-          connection =>
-            <ConnectionDialog
-              connection={connection}
-              close={() => selectConnection()}
-            />
-          }
-          </Show>
+        connection =>
+          <ConnectionDialog
+            connection={connection}
+            close={() => selectConnection()}
+          />
         }
+        </Show>
+      }
       </Show>
       <PopoverListButton>
         <For each={Object.keys(connectionsContext?.connections || {})}>

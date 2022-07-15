@@ -1,6 +1,6 @@
 import { Component, createEffect, createSignal, JSX, Show } from "solid-js";
 import { Connection, createTopicSubstription } from "./Connections";
-import { sensor_msgs } from "./ros/sensor_msgs";
+import { sensor_msgs } from "./ROS/sensor_msgs";
 
 export interface RawROSImageProps {
   connection: Connection;
@@ -21,10 +21,8 @@ const RawROSImage: Component<RawROSImageProps> = (props) => {
     if (rawImage && renderingContext) {
       if (!imageData || (imageData.width !== rawImage.width || imageData.height !== rawImage.height)) {
         imageData = renderingContext.createImageData(rawImage.width, rawImage.height);
-        console.log(`Resize imageData: ${imageData.width}x${imageData.height}`);
       }
       const rawData = atob(rawImage.data);
-      console.log(rawData.length);
       switch (rawImage.encoding) {
       case "rgb8":
         for (let y = 0; y < rawImage.height; ++y) {
@@ -73,7 +71,7 @@ const CompressedROSImage: Component<CompressedROSImageProps> = (props) => {
     compressedImage =>
       <img
         style={props.style}
-        src={`data:image/jpeg;base64, ${compressedImage.data}`}
+        src={`data:image/${compressedImage.format};base64, ${compressedImage.data}`}
       />
     }
     </Show>

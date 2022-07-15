@@ -65,7 +65,7 @@ export namespace sensor_msgs {
 
   export interface CompressedImage {
     header: std_msgs.Header;
-    format: string;
+    format: "jpeg" | "png";
     data: string;
   }
 }

@@ -3,6 +3,7 @@ import Toolbar from "@suid/material/Toolbar";
 import RobotsMenu from "./RobotsMenu";
 import { Component } from "solid-js";
 import ConnectionsMenu from "./ConnectionsMenu";
+import ShipMenu from "./ShipMenu";
 
 export interface MenuBarProps {
 }
@@ -13,6 +14,7 @@ const MenuBar: Component<MenuBarProps> = (_props: MenuBarProps) => {
       <Toolbar>
         <ConnectionsMenu />
         <RobotsMenu />
+        <ShipMenu />
       </Toolbar>
 
     </AppBar>

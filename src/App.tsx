@@ -16,6 +16,8 @@ import { AmbientLight } from './Three.js/AmbientLight';
 import { Skybox } from './Three.js/Skybox';
 import { Water } from './Three.js/Water';
 import RobotMeshes from './BugWright2/RobotMeshes';
+import ConfigProvider from './Config';
+import { Ship } from './BugWright2/Ship';
 
 const App: Component = () => {
   const scene = new Scene();
@@ -32,41 +34,44 @@ const App: Component = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <ROSBridgeConnectionsProvider>
-        <RobotListProvider>
-          <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-            <MenuBar />
-            <Grid container sx={{ flexGrow: 1, overflow: "auto" }}>
-              <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-                <RobotOverview />
+      <ConfigProvider>
+        <ROSBridgeConnectionsProvider>
+          <RobotListProvider>
+            <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+              <MenuBar />
+              <Grid container sx={{ flexGrow: 1, overflow: "auto" }}>
+                <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+                  <RobotOverview />
+                </Grid>
+                <Grid item md={9} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+                  <Ship scene={scene} />
+                  <Skybox scene={scene} baseURL="/src/assets/skyboxes/clouds" />
+                  <Water scene={scene} waterNormalsTexture="/src/assets/waternormals.jpg" width={10000} height={10000} />
+                  <AmbientLight scene={scene} intensity={0.3} />
+                  <RobotMeshes scene={scene} />
+                  <Viewport scene={scene} style={{ flexGrow: "1", height: "100%" }} />
+                  {
+                    // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
+                  }
+                </Grid>
+                {/*
+                <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <SearchIcon />
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      placeholder="Filter AoIs"
+                    />
+                    <FilterIcon />
+                  </Box>
+                </Grid>
+                */}
               </Grid>
-              <Grid item md={9} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-                <Skybox scene={scene} baseURL="/src/assets/skyboxes/clouds" />
-                <Water scene={scene} waterNormalsTexture="/src/assets/waternormals.jpg" width={10000} height={10000} />
-                <AmbientLight scene={scene} intensity={0.3} />
-                <RobotMeshes scene={scene} />
-                <Viewport scene={scene} style={{ flexGrow: "1", height: "100%" }} />
-                {
-                  // <Viewport3D scene={scene()} cameraType="orthographic" style={{ flexGrow: "1", height: "100%" }} />
-                }
-              </Grid>
-              {/*
-              <Grid item md={3} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <SearchIcon />
-                  <TextField
-                    fullWidth
-                    variant="standard"
-                    placeholder="Filter AoIs"
-                  />
-                  <FilterIcon />
-                </Box>
-              </Grid>
-              */}
-            </Grid>
-          </Box>
-        </RobotListProvider>
-      </ROSBridgeConnectionsProvider>
+            </Box>
+          </RobotListProvider>
+        </ROSBridgeConnectionsProvider>
+      </ConfigProvider>
     </ThemeProvider>
   );
 };

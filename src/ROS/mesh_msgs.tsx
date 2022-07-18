@@ -1,4 +1,5 @@
 import { geometry_msgs } from "./geometry_msgs";
+import { std_msgs } from "./std_msgs";
 
 export namespace mesh_msgs {
   export interface MeshTriangleIndices {
@@ -12,9 +13,8 @@ export namespace mesh_msgs {
   }
 
   export interface MeshGeometryStamped {
+    header: std_msgs.Header;
     uuid: string;
     mesh_geometry: MeshGeometry;
   }
-
 }
-

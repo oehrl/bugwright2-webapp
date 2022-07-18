@@ -8,7 +8,7 @@ export interface RobotMeshesProps {
 }
 
 const RobotMeshes: Component<RobotMeshesProps> = (props) => {
-  return (
+ return (
     <For each={useRobots()}>
     {
     robot =>

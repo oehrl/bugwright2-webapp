@@ -34,7 +34,7 @@ export function useTransform(connectionURL?: string, topic?: string) {
     if (conn.topics[topic] === "geometry_msgs/PointStamped") {
       subscription = conn.rosbridgeConnection.subscribe<geometry_msgs.PointStamped>(topic, message => {
         setTransform({
-          position: new Vector3(message.point.x, message.point.y, message.point.z),
+          position: new Vector3(message.point.y, message.point.z, message.point.x),
         });
       });
     } else {

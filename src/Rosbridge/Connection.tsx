@@ -33,8 +33,17 @@ export default class RosbridgeConnection {
         case "publish":
           if (data.topic in this.topicCallbacks) {
             this.topicCallbacks[data.topic].invoke(data.msg);
+            if (this.topicCallbacks[data.topic].subscriptionCount === 0) {
+              this.sendMessage({
+                op: "unsubscribe",
+                topic: data.topic,
+              });
+            }
           } else {
-            console.error(`Received publish message for topic not subscribed to.`);
+            this.sendMessage({
+              op: "unsubscribe",
+              topic: data.topic,
+            });
           }
           break;
 
@@ -60,7 +69,7 @@ export default class RosbridgeConnection {
   }
 
   subscribe<T = any>(topic: string, callback: (msg: T) => void) {
-    if (!(topic in this.topicCallbacks)) {
+    if (!(topic in this.topicCallbacks) || this.topicCallbacks[topic].subscriptionCount === 0) {
       this.sendMessage({
         op: "subscribe",
         topic,

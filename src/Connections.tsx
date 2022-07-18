@@ -155,11 +155,7 @@ export function connection(connections: ConnectionsContextValue, url?: string) {
 export function createTopicSubstription<T = any>(connection: Connection, topic: string) {
   const [message, setMessage] = createSignal<T | undefined>(undefined);
 
-  let topicSubscription = connection.rosbridgeConnection.subscribe(topic, setMessage);
-  createEffect(() => {
-    topicSubscription.unsubscribe();
-    topicSubscription = connection.rosbridgeConnection.subscribe(topic, setMessage);
-  });
+  const topicSubscription = connection.rosbridgeConnection.subscribe(topic, setMessage);
   onCleanup(() => topicSubscription.unsubscribe());
 
   return message;

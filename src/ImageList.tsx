@@ -5,12 +5,12 @@ import Paper from "@suid/material/Paper";
 import Skeleton from "@suid/material/Skeleton";
 import { Component, createEffect, createSignal, For, JSX, onCleanup, onMount } from "solid-js";
 import { sensor_msgs } from "./ros/sensor_msgs";
-import { RosbridgeConnection } from "./Rosbridge";
+import { ROSBridgeConnection } from "./ROSBridge";
 import ROSImage from "./ROSImage";
 
 export interface ImageListProps  {
   style?: JSX.CSSProperties | string;
-  connection: RosbridgeConnection | null;
+  connection: ROSBridgeConnection | null;
   onSelectionChanged: (topic: string | null) => void;
 }
 

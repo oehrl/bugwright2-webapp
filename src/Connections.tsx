@@ -11,15 +11,15 @@ export interface ROSTopic {
 export interface Connection {
   rosbridgeConnection: RosbridgeConnection;
   status: ConnectionStatus;
-  topics: {[topic: string]: string};
+  topics: ROSTopic[];
 }
 
 export function topicsWithTypes(connection: Connection, types: string[]) {
-  return Object.keys(connection.topics).filter(topic => types.indexOf(connection.topics[topic]) !== -1);
+  return connection.topics.filter(topic => types.indexOf(topic.type) !== -1);
 }
 
 export function topicsWithType(connection: Connection, type: string) {
-  return Object.keys(connection.topics).filter(topic => connection.topics[topic] === type);
+  return connection.topics.filter(topic => topic.type === type);
 }
 
 export interface ConnectionsContextValue {
@@ -33,6 +33,18 @@ export interface ConnectionsContextValue {
 export type Connections = { [key: string]: Connection }
 
 export const ConnectionsContext = createContext<ConnectionsContextValue>();
+
+async function getTopics(connection: RosbridgeConnection) {
+  const response = await connection.callService<Topics>("/rosapi/topics");
+  const topics: ROSTopic[] = [];
+  for (let i = 0; i < response.topics.length; ++i) {
+    topics.push({
+      id: response.topics[i],
+      type: response.types[i],
+    });
+  }
+  return topics;
+}
 
 export default function ROSBridgeConnectionsProvider(props: PropsWithChildren) {
   const [connections, setConnections] = createStore<Connections>({});
@@ -49,22 +61,16 @@ export default function ROSBridgeConnectionsProvider(props: PropsWithChildren) {
         setConnections(rosbridgeConnection.url, {
           rosbridgeConnection,
           status: "Connecting",
-          topics: {},
+          topics: [],
         });
         rosbridgeConnection.onStatusChange.subscribe(
-          status => {
+          async status => {
             if (!(rosbridgeConnection.url in connections)) {
               return;
             }
             setConnections(rosbridgeConnection.url, "status", status);
             if (status === "Connected") {
-              rosbridgeConnection.callService<Topics>("/rosapi/topics", response => {
-                const topics: {[topic: string]: string} = {};
-                for (let i = 0; i < response.topics.length; ++i) {
-                  topics[response.topics[i]] = response.types[i];
-                }
-                setConnections(rosbridgeConnection.url, "topics", topics);
-              });
+              setConnections(rosbridgeConnection.url, "topics", await getTopics(rosbridgeConnection));
             }
           }
         );
@@ -94,6 +100,18 @@ export function useConnectionsContext() {
 }
 
 export function connection(connections: ConnectionsContextValue, url?: string) {
+}
+
+export function useUpdateTopics(url: string) {
+  const context = useConnectionsContext();
+  return async () => {
+    if (!context || !(url in context?.connections)) {
+      console.error(`Cannot update topics of ${url}: connection not present`);
+      return;
+    }
+    context.setConnections(url, "topics",
+      await getTopics(context.connections[url].rosbridgeConnection));
+  }
 }
 
 // export function useConnections() {

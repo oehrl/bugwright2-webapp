@@ -1,10 +1,12 @@
+import IconButton from "@suid/material/IconButton";
+import ReloadIcon from "@suid/icons-material/Cached";
 import Link from "@suid/material/Link";
 import List from "@suid/material/List";
 import ListItem from "@suid/material/ListItem";
 import TextField from "@suid/material/TextField";
 import { Component, For } from "solid-js";
 import Dialog from ".";
-import { Connection } from "../Connections";
+import { Connection, useUpdateTopics } from "../Connections";
 
 export interface ConnectionDialogProps {
   connection: Connection;
@@ -16,6 +18,7 @@ const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
     const [pkg, message] = type.split("/");
     return `http://docs.ros.org/en/${rosversion || "melodic"}/api/${pkg}/html/msg/${message}.html`;
   };
+  const updateTopics = useUpdateTopics(props.connection.rosbridgeConnection.url);
 
   return (
     <Dialog
@@ -32,22 +35,27 @@ const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
           readOnly: true
         }}
       />
-      <h3>Topics</h3>
+      <h3>
+        Topics
+        <IconButton onClick={updateTopics}>
+          <ReloadIcon />
+        </IconButton>
+      </h3>
       <List>
-        <For each={Object.keys(props.connection.topics)}>
+        <For each={props.connection.topics}>
         {
         topic => 
           <ListItem sx={{ whiteSpace: "nowrap" }}>
           {
-            topic
+            topic.id
           }
             :&emsp;
             <Link
-              href={getMessageTypeURL(props.connection.topics[topic])}
+              href={getMessageTypeURL(topic.type)}
               target="_blank"
             >
             {
-              props.connection.topics[topic]
+              topic.type
             }
             </Link>
           </ListItem>

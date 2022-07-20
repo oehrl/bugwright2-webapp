@@ -3,10 +3,15 @@ import { Message } from "./Message";
 
 export type ConnectionStatus = "Connecting" | "Connected" | "Not Connected";
 
+interface PromiseCallbacks {
+  resolve: (data: any) => void;
+  reject: (reason?: any) => void;
+}
+
 export default class RosbridgeConnection {
   socket: WebSocket;
   topicCallbacks: {[topic: string]: Event<[any]>} = {};
-  serviceCallbacks: {[topic: string]: ((data: any) => void)[]} = {};
+  servicePromises: {[service: string]: PromiseCallbacks[]} = {};
   onStatusChange = new Event<[ConnectionStatus]>();
 
   get url() { return this.socket.url; }
@@ -48,14 +53,17 @@ export default class RosbridgeConnection {
           break;
 
         case "service_response":
-          if (data.service in this.serviceCallbacks) {
-            for (const callback of this.serviceCallbacks[data.service]) {
-              callback(data.values);
-            }
+          if (data.service in this.servicePromises && this.servicePromises[data.service].length > 0) {
+            const promiseCallbacks = this.servicePromises[data.service][0];
+            promiseCallbacks.resolve(data.values);
+            this.servicePromises[data.service].splice(0, 1);
           } else {
             console.error(`Received service response for service not called.`);
           }
           break;
+
+        default:
+          console.log(data);
       }
     }
   }
@@ -79,16 +87,18 @@ export default class RosbridgeConnection {
     return this.topicCallbacks[topic].subscribe(callback);
   }
 
-  callService<T = any, ArgumentType = any>(service: string, callback: (values: T) => void, args?: ArgumentType) {
-    if (service in this.serviceCallbacks) {
-      this.serviceCallbacks[service].push(callback);
-    } else {
-      this.serviceCallbacks[service] = [callback];
-    }
-    this.sendMessage({
-      op: "call_service",
-      service,
-      args: args as any,
+  callService<T = any, ArgumentType = any>(service: string, args?: ArgumentType) {
+    return new Promise<T>((resolve, reject) => {
+      if (service in this.servicePromises) {
+        this.servicePromises[service].push({ resolve, reject });
+      } else {
+        this.servicePromises[service] = [{ resolve, reject }];
+      }
+      this.sendMessage({
+        op: "call_service",
+        service,
+        args: args as any,
+      });
     });
   }
 

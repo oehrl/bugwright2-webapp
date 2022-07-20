@@ -3,7 +3,12 @@ import { CubeTextureLoader, Scene } from 'three';
 
 export interface SkyboxProps {
   scene: Scene;
-  baseURL: string;
+  east: string;
+  west: string;
+  up: string;
+  down: string;
+  north: string;
+  south: string;
 }
 
 export function Skybox(props: SkyboxProps) {
@@ -11,12 +16,9 @@ export function Skybox(props: SkyboxProps) {
   createEffect(() => {
     const loader = new CubeTextureLoader();
     const texture = loader.load([
-      `${props.baseURL}/east.jpeg`,
-      `${props.baseURL}/west.jpeg`,
-      `${props.baseURL}/up.jpeg`,
-      `${props.baseURL}/down.jpeg`,
-      `${props.baseURL}/north.jpeg`,
-      `${props.baseURL}/south.jpeg`,
+      props.east, props.west,
+      props.up, props.down,
+      props.north, props.south,
     ]);
     props.scene.background = texture;
   });

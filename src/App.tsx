@@ -18,6 +18,13 @@ import { Water } from './Three.js/Water';
 import RobotMeshes from './BugWright2/RobotMeshes';
 import ConfigProvider from './Config';
 import { Ship } from './BugWright2/Ship';
+import waternormalsURL from './assets/waternormals.jpg';
+import skyboxDown from './assets/skyboxes/clouds/down.jpeg';
+import skyboxUp from './assets/skyboxes/clouds/up.jpeg';
+import skyboxEast from './assets/skyboxes/clouds/east.jpeg';
+import skyboxWest from './assets/skyboxes/clouds/west.jpeg';
+import skyboxNorth from './assets/skyboxes/clouds/north.jpeg';
+import skyboxSouth from './assets/skyboxes/clouds/south.jpeg';
 
 const App: Component = () => {
   const scene = new Scene();
@@ -45,8 +52,16 @@ const App: Component = () => {
                 </Grid>
                 <Grid item md={9} sx={{ height: "100%", padding: "0.5em", display: "flex", flexDirection: "column" }}>
                   <Ship scene={scene} />
-                  <Skybox scene={scene} baseURL="/src/assets/skyboxes/clouds" />
-                  <Water scene={scene} waterNormalsTexture="/src/assets/waternormals.jpg" width={10000} height={10000} />
+                  <Skybox
+                    scene={scene}
+                    east={skyboxEast}
+                    west={skyboxWest}
+                    up={skyboxUp}
+                    down={skyboxDown}
+                    north={skyboxNorth}
+                    south={skyboxSouth}
+                  />
+                  <Water scene={scene} waterNormalsTexture={waternormalsURL} width={10000} height={10000} />
                   <AmbientLight scene={scene} intensity={0.3} />
                   <RobotMeshes scene={scene} />
                   <Viewport scene={scene} style={{ flexGrow: "1", height: "100%" }} />

@@ -13,6 +13,11 @@ export interface Connection {
   rosbridgeConnection: RosbridgeConnection;
   status: ConnectionStatus;
   topics: ROSTopic[];
+  bytesSent: number;
+  bytesReceived: number;
+  openTimestamp: number;
+  downloadBitrate: number;
+  uploadBitrate: number;
 }
 
 export interface ConnectionsContextValue {
@@ -55,15 +60,42 @@ export default function ROSBridgeConnectionsProvider(props: PropsWithChildren) {
           rosbridgeConnection,
           status: "Connecting",
           topics: [],
+          bytesSent: 0,
+          bytesReceived: 0,
+          downloadBitrate: 0,
+          uploadBitrate: 0,
         });
         rosbridgeConnection.onStatusChange.subscribe(
           async status => {
+            let timer: number|undefined;
             if (!(rosbridgeConnection.url in connections)) {
               return;
             }
             setConnections(rosbridgeConnection.url, "status", status);
+
             if (status === "Connected") {
+              setConnections(rosbridgeConnection.url, "openTimestamp", Date.now());
               setConnections(rosbridgeConnection.url, "topics", await getTopics(rosbridgeConnection));
+
+              let previousBytesSent = 0;
+              let previousBytesReceived = 0;
+              timer = setInterval(() => {
+                setConnections(rosbridgeConnection.url, "bytesSent", rosbridgeConnection.bytesSent); 
+                setConnections(rosbridgeConnection.url, "bytesReceived", rosbridgeConnection.bytesReceived);
+
+                const downloadBitrate = ((rosbridgeConnection.bytesReceived - previousBytesReceived) * 8) / 1000;
+                setConnections(rosbridgeConnection.url, "downloadBitrate", downloadBitrate);
+
+                const uploadBitrate = ((rosbridgeConnection.bytesSent - previousBytesSent) * 8) / 1000;
+                setConnections(rosbridgeConnection.url, "uploadBitrate", uploadBitrate);
+
+                previousBytesSent = rosbridgeConnection.bytesSent;
+                previousBytesReceived = rosbridgeConnection.bytesReceived;
+              }, 1000);
+            } else if (status === "Not Connected") {
+              if (typeof timer === "number") {
+                clearInterval(timer);
+              }
             }
           }
         );

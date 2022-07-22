@@ -13,6 +13,8 @@ export default class RosbridgeConnection {
   topicCallbacks: {[topic: string]: Event<[any]>} = {};
   servicePromises: {[service: string]: PromiseCallbacks[]} = {};
   onStatusChange = new Event<[ConnectionStatus]>();
+  bytesSent = 0;
+  bytesReceived = 0;
 
   get url() { return this.socket.url; }
 
@@ -33,6 +35,7 @@ export default class RosbridgeConnection {
       console.error(`Websocket error: ${error}`);
     }
     this.socket.onmessage = (event) => {
+      this.bytesReceived += event.data.length;
       const data = JSON.parse(event.data) as Message;
       switch (data.op) {
         case "publish":
@@ -73,7 +76,9 @@ export default class RosbridgeConnection {
   }
 
   sendMessage(message: Message) {
-    this.socket.send(JSON.stringify(message));
+    const serializeMessage = JSON.stringify(message);
+    this.socket.send(serializeMessage);
+    this.bytesSent += serializeMessage.length;
   }
 
   subscribe<T = any>(topic: string, callback: (msg: T) => void) {

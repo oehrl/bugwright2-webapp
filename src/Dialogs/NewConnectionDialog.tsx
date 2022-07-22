@@ -10,7 +10,7 @@ export interface NewConnectionDialogProps {
 }
 
 const NewConnectionDialog: Component<NewConnectionDialogProps> = (props) => {
-  const [url, setURL] = createSignal("ws://localhost:9090");
+  const [url, setURL] = createSignal("wss://localhost:9090");
 
   return (
     <Dialog

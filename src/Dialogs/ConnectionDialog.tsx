@@ -7,6 +7,10 @@ import TextField from "@suid/material/TextField";
 import { Component, For } from "solid-js";
 import Dialog from ".";
 import { Connection, useUpdateTopics } from "../Connections";
+import Table from "@suid/material/Table";
+import TableRow from "@suid/material/TableRow";
+import TableCell from "@suid/material/TableCell";
+import { CreateHumanReadableString } from "../UnitConversion";
 
 export interface ConnectionDialogProps {
   connection: Connection;
@@ -35,6 +39,25 @@ const ConnectionDialog: Component<ConnectionDialogProps> = (props) => {
           readOnly: true
         }}
       />
+      <h3>Network Data</h3>
+      <Table>
+        <TableRow>
+          <TableCell>Bytes Sent</TableCell>
+          <TableCell>{CreateHumanReadableString(props.connection.bytesSent, "byte")}</TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell>Bytes Received</TableCell>
+          <TableCell>{CreateHumanReadableString(props.connection.bytesReceived, "byte")}</TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell>Upload Bitrate</TableCell>
+          <TableCell>{CreateHumanReadableString(props.connection.uploadBitrate, "bit/s")}</TableCell>
+        </TableRow>
+        <TableRow>
+          <TableCell>Download Bitrate</TableCell>
+          <TableCell>{CreateHumanReadableString(props.connection.downloadBitrate, "bit/s")}</TableCell>
+        </TableRow>
+      </Table>
       <h3>
         Topics
         <IconButton onClick={updateTopics}>

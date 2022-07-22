@@ -1,9 +1,8 @@
-import { Component, createEffect, onCleanup, onMount } from "solid-js";
-import { Mesh, MeshBasicMaterial, Scene, SphereGeometry, Vector3 } from "three";
-import { createTopicSubstription, useConnectionsContext } from "../Connections";
+import { Component, createEffect, onCleanup, onMount, Show } from "solid-js";
+import { MeshBasicMaterial, Scene, SphereGeometry, Vector3 } from "three";
 import { Robot } from "../Robot";
-import { geometry_msgs } from "../ROS/geometry_msgs";
 import { useTransform } from "./Transform";
+import { Mesh } from "../Three.js/Mesh";
 
 export interface RobotMeshProps {
   scene: Scene;
@@ -11,20 +10,31 @@ export interface RobotMeshProps {
 }
 
 const RobotMesh: Component<RobotMeshProps> = (props) => {
-  const transform = useTransform(props.robot.connection, props.robot.poseTopic);
+  const transform = useTransform();
 
-  const sphereGeometry = new SphereGeometry(0.1);
-  const sphereMaterial = new MeshBasicMaterial({ color: 0xffff0000 });
-  const sphere = new Mesh(sphereGeometry, sphereMaterial);
-
-  createEffect(() => {
-    const robotTransform = transform();
-    sphere.position.copy(robotTransform.position || new Vector3());
-  });
-  onMount(() => props.scene.add(sphere));
-  onCleanup(() => props.scene.remove(sphere));
-  
-  return <></>;
+  return (
+    <Show when={props.robot.connection}>
+    {
+    connection =>
+      <Show when={props.robot.poseTopic}>
+      {
+      poseTopic =>
+        <Show when={transform(connection, poseTopic)}>
+        {
+        transform =>
+          <Mesh
+            scene={props.scene}
+            geometry={new SphereGeometry(0.1)}
+            material={new MeshBasicMaterial({ color: 0xffff0000 })}
+            position={transform.position}
+          />
+        }
+        </Show>
+      }
+      </Show>
+    }
+    </Show>
+  );
 }
 
 export default RobotMesh;

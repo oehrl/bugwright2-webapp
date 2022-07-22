@@ -1,7 +1,6 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { Quaternion, Vector3 } from "three";
-import { createTopicSubstription, useConnectionsContext } from "../Connections";
-import { EventSubscription } from "../Event";
+import { useTopicMessage, useTopicType } from "../Connections";
 import { geometry_msgs } from "../ROS/geometry_msgs";
 
 export interface Transform {
@@ -9,38 +8,30 @@ export interface Transform {
   rotation?: Quaternion;
 }
 
-export function useTransform(connectionURL?: string, topic?: string) {
-  const connectionsContext = useConnectionsContext();
+export function useTransform() {
+  const message = useTopicMessage();
+  const getTopicType = useTopicType();
   const [transform, setTransform] = createSignal<Transform>({});
-  const connection = () => connectionURL ? connectionsContext?.connections[connectionURL] : undefined;
 
-  let subscription: EventSubscription|undefined;
-
-  createEffect(() => {
-    subscription?.unsubscribe();
-    subscription = undefined;
-
-    if (!topic) {
-      setTransform({});
-      return;
-    }
-
-    const conn = connection();
-    if (!conn) {
-      setTransform({});
-      return;
-    }
-
-    if (conn.topics[topic] === "geometry_msgs/PointStamped") {
-      subscription = conn.rosbridgeConnection.subscribe<geometry_msgs.PointStamped>(topic, message => {
+  return (url: string, topic: string) => {
+    const transformMessage = message(url, topic);
+    if (transformMessage) {
+      const topicType = getTopicType(url, topic);
+      switch (topicType) {
+      case "geometry_msgs/PointStamped":
+        const pointStamped = transformMessage as geometry_msgs.PointStamped;
         setTransform({
-          position: new Vector3(message.point.y, message.point.z, message.point.x),
+          position: new Vector3(pointStamped.point.x, pointStamped.point.y, pointStamped.point.z),
+          rotation: new Quaternion(),
         });
-      });
-    } else {
-      console.log(`Invalid transform topic: ${conn.topics[topic]}`);
-    }
-  });
+        break;
 
-  return transform;
+      default:
+        console.error(`Invalid topic type: ${topicType}`);
+      }
+      return transform();
+    } else {
+      return undefined;
+    }
+  };
 }

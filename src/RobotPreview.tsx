@@ -5,42 +5,28 @@ import { Robot, useRobots } from "./Robot";
 import ArrowLeftIcon from "@suid/icons-material/ArrowLeft";
 import ArrowRightIcon from "@suid/icons-material/ArrowRight";
 import ROSImage from "./ROSImage";
-import { connection, topicsWithTypes, useConnectionsContext } from "./Connections";
+import { useConnectionStatus, useTopicsWithType } from "./Connections";
 
 export interface RobotPreviewProps {
   robot: Robot;
 }
 
 const RobotPreview: Component<RobotPreviewProps> = (props) => {
-  const connectionsContext = useConnectionsContext();
   const [imageIndex, setImageIndex] = createSignal(0);
-  const robotConnection = () => props.robot.connection ? connectionsContext?.connections[props.robot.connection] : undefined;
-  const imageTopics = () => {
-    const connection = robotConnection();
-    if (connection) {
-      return topicsWithTypes(connection, ["sensor_msgs/Image", "sensor_msgs/CompressedImage"]);
-    } else {
-      return [];
-    }
-  }
+  const connectionURL = () => props.robot.connection;
+  const connectionStatus = useConnectionStatus();
+  const topicsWithType = useTopicsWithType();
+  const imageTopics = (url: string) => topicsWithType(url, [
+    "sensor_msgs/Image",
+    "sensor_msgs/CompressedImage"
+  ]);
 
-   const nextImage = () => {
-     setImageIndex((imageIndex() + 1) % imageTopics().length);
-   }
-   const previousImage = () => {
-     setImageIndex(imageIndex() > 0 ? imageIndex() - 1 : imageTopics().length - 1);
-   }
-  
-  // return (
-  //   <Box
-  //     sx={{
-  //       width: "100%",
-  //     }}
-  //   >
-  //     <h3>{ props.robot.name }
-  //     </h3>
-  //   </Box>
-  // );
+  const nextImage = (url: string) => {
+    setImageIndex((imageIndex() + 1) % imageTopics(url).length);
+  }
+  const previousImage = (url: string) => {
+   setImageIndex(imageIndex() > 0 ? imageIndex() - 1 : imageTopics(url).length - 1);
+  }
 
   return (
     <Box
@@ -49,48 +35,50 @@ const RobotPreview: Component<RobotPreviewProps> = (props) => {
       }}
     >
       <h3>{ props.robot.name }</h3>
-      <Show when={robotConnection()} fallback="Not connected">
+      <Show when={connectionURL()} fallback="No connection specified">
       {
-      connection =>
-        <Show when={imageIndex() < imageTopics().length} fallback="No video feed available">
-          <Box
-            sx={{
-              flexGrow: 1,
-              display: "flex",
-              flexDirection: "row",
-            }}
-          >
-            <IconButton onClick={previousImage}>
-              <ArrowLeftIcon />
-            </IconButton>
+      connectionURL =>
+        <Show when={connectionStatus(connectionURL) === "Connected"} fallback="Not connected">
+          <Show when={imageIndex() < imageTopics(connectionURL).length} fallback="No video feed available">
             <Box
               sx={{
                 flexGrow: 1,
-                position: "relative",
+                display: "flex",
+                flexDirection: "row",
               }}
             >
-              <ROSImage
-                connection={connection}
-                topic={imageTopics()[imageIndex()]}
-                style={{
-                  "max-width": "100%",
-                }}
-              />
+              <IconButton onClick={() => previousImage(connectionURL)}>
+                <ArrowLeftIcon />
+              </IconButton>
               <Box
                 sx={{
-                  position: "absolute",
-                  bottom: 0,
-                  backgroundColor: "black",
-                  opacity: 0.8,
+                  flexGrow: 1,
+                  position: "relative",
                 }}
               >
-                { imageTopics()[imageIndex()] }
+                <ROSImage
+                  connection={connectionURL}
+                  topic={imageTopics(connectionURL)[imageIndex()].id}
+                  style={{
+                    "max-width": "100%",
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    backgroundColor: "black",
+                    opacity: 0.8,
+                  }}
+                >
+                  { imageTopics(connectionURL)[imageIndex()].id }
+                </Box>
               </Box>
+              <IconButton onClick={() => nextImage(connectionURL)}>
+                <ArrowRightIcon />
+              </IconButton>
             </Box>
-            <IconButton onClick={nextImage}>
-              <ArrowRightIcon />
-            </IconButton>
-          </Box>
+          </Show>
         </Show>
       }
       </Show>

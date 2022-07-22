@@ -1,5 +1,6 @@
 import { createContext, createEffect, createSignal, onCleanup, PropsWithChildren, useContext } from "solid-js";
 import { createStore, SetStoreFunction, Store } from 'solid-js/store';
+import { EventSubscription } from "./Event";
 import { Topics } from "./ROS/rosapi";
 import RosbridgeConnection, { ConnectionStatus } from "./Rosbridge/Connection";
 
@@ -12,14 +13,6 @@ export interface Connection {
   rosbridgeConnection: RosbridgeConnection;
   status: ConnectionStatus;
   topics: ROSTopic[];
-}
-
-export function topicsWithTypes(connection: Connection, types: string[]) {
-  return connection.topics.filter(topic => types.indexOf(topic.type) !== -1);
-}
-
-export function topicsWithType(connection: Connection, type: string) {
-  return connection.topics.filter(topic => topic.type === type);
 }
 
 export interface ConnectionsContextValue {
@@ -99,7 +92,19 @@ export function useConnectionsContext() {
   return useContext(ConnectionsContext);
 }
 
-export function connection(connections: ConnectionsContextValue, url?: string) {
+export function useConnectionURLs() {
+  const context = useConnectionsContext();
+  return () => context ? Object.keys(context.connections) : [];
+}
+
+export function useConnection() {
+  const context = useConnectionsContext();
+  return (url: string) => context?.connections[url];
+}
+
+export function useConnectionStatus() {
+  const connection = useConnection();
+  return (url: string) => connection(url)?.status;
 }
 
 export function useUpdateTopics(url: string) {
@@ -114,67 +119,71 @@ export function useUpdateTopics(url: string) {
   }
 }
 
-// export function useConnections() {
-//   const context = useConnectionsContext();
-//   return context?.connections || {};
-// }
+export function useTopics() {
+  const connection = useConnection();
+  return (url: string) => connection(url)?.topics || [];
+}
 
+export function useTopicType() {
+  const topics = useTopics();
 
-// export function useConnectionStatus(url?: string) {
-//   const connection = useConnection(url);
-//   // const [status, setStatus] = createSignal<ConnectionStatus>(connection?.status || "Not Connected");
+  return (url: string, topic: string) => {
+    for (const t of topics(url)) {
+      if (t.id === topic) {
+        return t.type;
+      }
+    }
+    return undefined;
+  }
+}
 
-//   // let statusChangeSubscription = connection?.onStatusChange.subscribe(setStatus);
-//   // createEffect(() => {
-//   //   console.log(`useConnectionStatus: createEffect ${url}`);
-//   //   statusChangeSubscription?.unsubscribe();
-//   //   statusChangeSubscription = connection?.onStatusChange.subscribe(setStatus);
-//   // });
-//   // onCleanup(() => statusChangeSubscription?.unsubscribe());
+export function useTopicsWithType() {
+  const topics = useTopics();
+  return (url: string, type: string|string[]) => {
+    return topics(url).filter(topic =>
+      typeof type === "string"
+        ? topic.type === type
+        : type.indexOf(topic.type) !== -1);
+  }
+}
 
-//   return () => connection?.status;
-// }
+export function useTopicSubscription<T = any>() {
+  return (url: string, topic: string) => {
+    createEffect(() => console.log(`${url}: ${topic}`));
+  };
+}
 
-// export function useTopics(url?: string) {
-//   const connection = useConnection(url);
-//   // const [topics, setTopics] = createSignal(connection?.topics || []);
+export function useTopicMessage<T = any>() {
+  const connection = useConnection();
+  const [message, setMessage] = createSignal<T | undefined>(undefined);
+  let topicSubscription: EventSubscription | undefined;
+  let currentURL: string | undefined;
+  let currentTopic: string | undefined;
 
-//   // let statusChangeSubscription = connection?.onTopicsChange.subscribe(setTopics);
-//   // createEffect(() => {
-//   //   statusChangeSubscription?.unsubscribe();
-//   //   statusChangeSubscription = connection?.onTopicsChange.subscribe(setTopics);
-//   // });
-//   // onCleanup(() => statusChangeSubscription?.unsubscribe());
+  onCleanup(() => topicSubscription?.unsubscribe());
 
-//   return () => connection()?.topics;
-// }
+  return (url: string, topic: string) => {
+    const conn = connection(url);
+    if (url !== currentURL || topic !== currentTopic) {
+      topicSubscription?.unsubscribe();
+      conn?.rosbridgeConnection.subscribe(topic, setMessage);
+      currentURL = url;
+      currentTopic = topic;
+    }
+    return message();
+  };
+}
 
-// export function useTopicType(url?: string, topicName?: string) {
-//   const topics = useTopics(url);
-//   return () => {
-//     for (const topic of topics() || []) {
-//       if (topic.id === topicName) {
-//         return topic.type;
-//       }
-//     }
-//   }
-// }
-
-// export function useTopicsWithTypes(url: string|undefined, types: string[]) {
-//   const topics = useTopics(url);
-//   return () => topics()?.filter(topic => types.indexOf(topic.type) !== -1);
-// }
-
-// export function useTopicsWithType(url: string|undefined, type: string) {
-//   const topics = useTopics(url);
-//   return () => topics()?.filter(topic => topic.type === type);
-// }
-
-export function createTopicSubstription<T = any>(connection: Connection, topic: string) {
+export function createTopicSubstription<T = any>(url: string, topic: string) {
+  const connection = useConnection();
   const [message, setMessage] = createSignal<T | undefined>(undefined);
 
-  const topicSubscription = connection.rosbridgeConnection.subscribe(topic, setMessage);
-  onCleanup(() => topicSubscription.unsubscribe());
+  let topicSubscription: EventSubscription | undefined;
+  createEffect(() => {
+    topicSubscription?.unsubscribe();
+    topicSubscription = connection(url)?.rosbridgeConnection.subscribe(topic, setMessage);
+  });
+  onCleanup(() => topicSubscription?.unsubscribe());
 
   return message;
 }

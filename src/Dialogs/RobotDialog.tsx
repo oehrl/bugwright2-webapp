@@ -1,10 +1,54 @@
 import Button from "@suid/material/Button";
 import FormControl from "@suid/material/FormControl";
 import TextField from "@suid/material/TextField";
-import { Component, createEffect, createSignal, For, Show, useContext } from "solid-js";
+import { Component, createEffect, createSignal, For, Show } from "solid-js";
 import Dialog from ".";
-import { ConnectionsContext, topicsWithTypes } from "../Connections";
+import { useConnectionURLs, useTopicsWithType } from "../Connections";
 import { useRobot, useRobotList } from "../Robot";
+
+interface TopicSelectorPropsAllowEmpty {
+  connectionURL: string;
+  type: string|string[];
+  allowEmpty: true;
+  value?: string;
+  onChange: (topic?: string) => void;
+}
+
+interface TopicSelectorPropsDontAllowEmpty {
+  connectionURL: string;
+  type: string|string[];
+  allowEmpty?: false;
+  value: string;
+  onChange: (topic: string) => void;
+}
+
+type TopicSelectorProps = TopicSelectorPropsAllowEmpty | TopicSelectorPropsDontAllowEmpty;
+
+const TopicSelector: Component<TopicSelectorProps> = (props) => {
+  const topicsWithType = useTopicsWithType();
+
+  return (
+    <select
+      onChange={element => props.onChange(element.currentTarget.value)}
+    >
+      <Show when={props.allowEmpty}>
+        <option></option>
+      </Show>
+      <For each={topicsWithType(props.connectionURL, props.type)}>
+      {
+      topic => 
+        <option
+          selected={topic.id === props.value}
+        >
+        {
+          topic.id
+        }
+        </option>
+      }
+      </For>
+    </select>
+  );
+}
 
 export interface RobotDialogProps {
   index?: number;
@@ -12,16 +56,13 @@ export interface RobotDialogProps {
 }
 
 const RobotDialog: Component<RobotDialogProps> = (props) => {
-  const connectionsContext = useContext(ConnectionsContext);
-
   const robotList = useRobotList();
   const robot = () => typeof props.index === "number" ? useRobot(props.index) : undefined;
 
   const [name, setName] = createSignal(robot()?.name);
   const [connection, setConnection] = createSignal(robot()?.connection);
-  // const [prefix, setPrefix] = createSignal(robot()?.prefix);
   const [poseTopic, setPoseTopic] = createSignal(robot()?.poseTopic);
-  // const connections = useConnections();
+  const connectionURLs = useConnectionURLs();
 
   createEffect(() => {
     const robotDetails = robot();
@@ -48,46 +89,31 @@ const RobotDialog: Component<RobotDialogProps> = (props) => {
           onChange={element => setConnection(element.currentTarget.value)}
         >
           <option></option>
-          <For each={Object.values(connectionsContext?.connections || {})}>
+          <For each={connectionURLs()}>
           {
             availableConnection => 
               <option
-                selected={availableConnection.rosbridgeConnection.url === connection()}
+                selected={availableConnection === connection()}
               >
               {
-                availableConnection.rosbridgeConnection.url
+                availableConnection
               }
               </option>
           }
           </For>
         </select>
-        <select
-          onChange={element => setPoseTopic(element.currentTarget.value)}
-        >
-          <option></option>
-          <Show when={connectionsContext?.connections[connection() || ""]}>
-          {
-          connection =>
-            <For
-              each={topicsWithTypes(
-                connection,
-                ["geometry_msgs/PointStamped", "geometry_msgs/PoseStamped"])
-              }
-            >
-            {
-            topic => 
-              <option
-                selected={topic === poseTopic()}
-              >
-              {
-                topic
-              }
-              </option>
-            }
-            </For>
-          }
-          </Show>
-        </select>
+        <Show when={connection()}>
+        {
+        connection =>
+          <TopicSelector
+            connectionURL={connection}
+            type={["geometry_msgs/PointStamped", "geometry_msgs/PoseStamped"]}
+            allowEmpty={true}
+            onChange={value => setPoseTopic(value)}
+            value={poseTopic()}
+          />
+        }
+        </Show>
         <Button
           variant="text"
           onClick={() => {
